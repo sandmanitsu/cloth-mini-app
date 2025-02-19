@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	Host string `env:"HOST" env-required:"true"`
-	Port int    `env:"PORT" env-required:"true"`
+	Port string `env:"PORT" env-required:"true"`
 	Env  string `env:"ENV" env-required:"true"`
 	DB   DB
 }
