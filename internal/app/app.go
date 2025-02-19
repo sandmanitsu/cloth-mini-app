@@ -24,7 +24,7 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	}
 
 	// prepare repositories
-	itemRepo := repository.NewItemRepository(storage)
+	itemRepo := repository.NewItemRepository(logger, storage)
 
 	// prepare services
 	itemService := item.NewItemService(logger, itemRepo)

@@ -1,17 +1,24 @@
 package rest
 
 import (
+	"cloth-mini-app/internal/domain"
 	"net/http"
+	"net/url"
 
 	"github.com/labstack/echo/v4"
 )
 
 type ItemService interface {
-	Items()
+	// Fetching items
+	Items(params url.Values) ([]domain.ItemAPI, error)
 }
 
 type ItemHandler struct {
 	Service ItemService
+}
+
+type ErrorResponse struct {
+	Err string `json:"error"`
 }
 
 func NewItemHandler(e *echo.Echo, srv ItemService) {
@@ -23,8 +30,25 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	g.GET("/get", handler.Items)
 }
 
-func (i *ItemHandler) Items(c echo.Context) error {
-	i.Service.Items()
+type ItemResponse struct {
+	Count int              `json:"count"`
+	Items []domain.ItemAPI `json:"items"`
+}
 
-	return c.JSON(http.StatusOK, "{\"status\":1}")
+func (i *ItemHandler) Items(c echo.Context) error {
+	request := c.Request()
+	err := request.ParseForm()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: parse query params"})
+	}
+
+	items, err := i.Service.Items(request.Form)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: getting items"})
+	}
+
+	return c.JSON(http.StatusOK, ItemResponse{
+		Count: len(items),
+		Items: items,
+	})
 }
