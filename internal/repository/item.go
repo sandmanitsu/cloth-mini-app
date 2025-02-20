@@ -36,7 +36,7 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-	q := psql.Select("i.id", "i.brand", "i.name", "i.description", "i.sex", "i.size_amount", "i.price", "i.discount", "i.outer_link", "c.type", "c.name AS category_name").
+	q := psql.Select("i.id", "i.brand", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "c.type", "c.name AS category_name").
 		From("items i").
 		LeftJoin("category c on i.category_id = c.id").
 		Where(filter).
@@ -55,7 +55,7 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	var items []domain.ItemAPI
 	for rows.Next() {
 		var item domain.ItemAPI
-		if err := rows.Scan(&item.ID, &item.Brand, &item.Name, &item.Description, &item.Sex, &item.SizeAmount, &item.Price, &item.Discount, &item.OuterLink, &item.CategoryType, &item.CategoryName); err != nil {
+		if err := rows.Scan(&item.ID, &item.Brand, &item.Name, &item.Description, &item.Sex, &item.Price, &item.Discount, &item.OuterLink, &item.CategoryType, &item.CategoryName); err != nil {
 			i.logger.Error(op, sl.Err(err))
 
 			return nil, err
