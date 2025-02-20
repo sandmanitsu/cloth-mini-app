@@ -28,6 +28,7 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 
 	g := e.Group("/item")
 	g.GET("/get", handler.Items)
+	g.POST("/update/:id", handler.Update)
 }
 
 type ItemResponse struct {
@@ -35,6 +36,7 @@ type ItemResponse struct {
 	Items []domain.ItemAPI `json:"items"`
 }
 
+// GET /item/get Fetch items by query params
 func (i *ItemHandler) Items(c echo.Context) error {
 	request := c.Request()
 	err := request.ParseForm()
@@ -52,3 +54,17 @@ func (i *ItemHandler) Items(c echo.Context) error {
 		Items: items,
 	})
 }
+
+// type Item struct {
+// 	Id int `param:"id"`
+// }
+
+// func (i *ItemHandler) Update(c echo.Context) error {
+// 	var im Item
+// 	err := c.Bind(&im)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 	}
+// 	fmt.Println(im)
+// 	return c.JSON(http.StatusOK, "update!")
+// }
