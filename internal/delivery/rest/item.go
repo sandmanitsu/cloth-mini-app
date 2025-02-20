@@ -11,6 +11,7 @@ import (
 type ItemService interface {
 	// Fetching items
 	Items(params url.Values) ([]domain.ItemAPI, error)
+	Update(iten ItemDTO) error
 }
 
 type ItemHandler struct {
@@ -55,16 +56,32 @@ func (i *ItemHandler) Items(c echo.Context) error {
 	})
 }
 
-// type Item struct {
-// 	Id int `param:"id"`
-// }
+type ItemDTO struct {
+	ID          int     `param:"id"`
+	Brand       *string `json:"brand"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Sex         *int    `json:"sex"`
+	CategoryId  *int    `json:"category_id"`
+	Price       *int    `json:"price"`
+	Discount    *int    `json:"discount"`
+	OuterLink   *string `json:"outerlink"`
+}
 
-// func (i *ItemHandler) Update(c echo.Context) error {
-// 	var im Item
-// 	err := c.Bind(&im)
-// 	if err != nil {
-// 		fmt.Println(err)
-// 	}
-// 	fmt.Println(im)
-// 	return c.JSON(http.StatusOK, "update!")
-// }
+type ItemUpdateResponse struct {
+	Success bool `json:"update"`
+}
+
+func (i *ItemHandler) Update(c echo.Context) error {
+	var item ItemDTO
+	err := c.Bind(&item)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: binding params"})
+	}
+
+	i.Service.Update(item)
+
+	return c.JSON(http.StatusOK, ItemUpdateResponse{
+		Success: true,
+	})
+}

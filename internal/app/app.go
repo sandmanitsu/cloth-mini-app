@@ -3,9 +3,9 @@ package app
 import (
 	"cloth-mini-app/internal/congig"
 	"cloth-mini-app/internal/delivery/rest"
-	"cloth-mini-app/internal/item"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/repository"
+	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
 	"log/slog"
 	"os"

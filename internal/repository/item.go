@@ -3,10 +3,12 @@ package repository
 import (
 	"cloth-mini-app/internal/domain"
 	sl "cloth-mini-app/internal/logger"
+	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 )
@@ -64,4 +66,28 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	}
 
 	return items, nil
+}
+
+func (i *ItemRepository) Update(data item.ItemUpdateData) error {
+	const op = "repository.item.Update"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Update("items")
+
+	for col, value := range data.Data {
+		psql = psql.Set(col, value)
+	}
+
+	sql, args, err := psql.Set("updated_at", time.Now()).Where("id = ?", data.ID).ToSql()
+	if err != nil {
+		i.logger.Error(op, sl.Err(err))
+		return err
+	}
+
+	_, err = i.db.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(op, sl.Err(err))
+		return err
+	}
+
+	return nil
 }
