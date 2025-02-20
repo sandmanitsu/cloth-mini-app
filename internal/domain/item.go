@@ -2,6 +2,7 @@ package domain
 
 import "time"
 
+// item model table items
 type Item struct {
 	ID          uint       `json:"id" gorm:"primarykey"`
 	Brand       string     `json:"brand"`
@@ -16,6 +17,7 @@ type Item struct {
 	UpdatedAt   *time.Time `json:"updated_at"`
 }
 
+// item model with field from category table
 type ItemAPI struct {
 	ID           uint       `json:"id" gorm:"primarykey"`
 	Brand        string     `json:"brand"`

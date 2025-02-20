@@ -22,7 +22,7 @@ type ItemService struct {
 	itemRepo ItemRepository
 }
 
-// Get service for item
+// Get item service object that represent the rest.ItemService interface
 func NewItemService(logger *slog.Logger, ir ItemRepository) *ItemService {
 	return &ItemService{
 		logger:   logger,
@@ -99,9 +99,10 @@ func (i *ItemService) validateInputParams(params url.Values) map[string]interfac
 
 type ItemUpdateData struct {
 	ID   int
-	Data map[string]interface{}
+	Data map[string]any
 }
 
+// Prepare data to update
 func (i *ItemService) Update(item rest.ItemDTO) error {
 	if item.ID == 0 {
 		return fmt.Errorf("error: empty or invalid id")
@@ -123,6 +124,7 @@ func (i *ItemService) Update(item rest.ItemDTO) error {
 	return nil
 }
 
+// Validating input update params
 func (i *ItemService) validateUpdateData(item rest.ItemDTO) map[string]any {
 	data := make(map[string]any)
 

@@ -22,6 +22,7 @@ type ErrorResponse struct {
 	Err string `json:"error"`
 }
 
+// Create item handler object
 func NewItemHandler(e *echo.Echo, srv ItemService) {
 	handler := &ItemHandler{
 		Service: srv,
@@ -72,6 +73,7 @@ type ItemUpdateResponse struct {
 	Success bool `json:"update"`
 }
 
+// POST /item/update/:id Update item with provided id (required) and updating params
 func (i *ItemHandler) Update(c echo.Context) error {
 	var item ItemDTO
 	err := c.Bind(&item)

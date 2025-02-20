@@ -22,6 +22,7 @@ type ItemRepository struct {
 	logger *slog.Logger
 }
 
+// Get item repository object that represent the item.ItemRepository interface
 func NewItemRepository(logger *slog.Logger, db *postgresql.Storage) *ItemRepository {
 	return &ItemRepository{
 		db:     db.DB,
@@ -29,6 +30,7 @@ func NewItemRepository(logger *slog.Logger, db *postgresql.Storage) *ItemReposit
 	}
 }
 
+// Get items records
 func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]domain.ItemAPI, error) {
 	const op = "repository.item.Items"
 
@@ -68,6 +70,7 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	return items, nil
 }
 
+// Update item record by ID
 func (i *ItemRepository) Update(data item.ItemUpdateData) error {
 	const op = "repository.item.Update"
 

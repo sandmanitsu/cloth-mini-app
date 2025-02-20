@@ -1,7 +1,7 @@
 package app
 
 import (
-	"cloth-mini-app/internal/congig"
+	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/delivery/rest"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/repository"

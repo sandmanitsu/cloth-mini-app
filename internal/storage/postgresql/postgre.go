@@ -1,7 +1,7 @@
 package postgresql
 
 import (
-	"cloth-mini-app/internal/congig"
+	"cloth-mini-app/internal/config"
 	"database/sql"
 	"fmt"
 
@@ -13,7 +13,7 @@ type Storage struct {
 }
 
 // Create postgresql db instanse
-func NewPostgreSQL(cfg congig.DB) (*Storage, error) {
+func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 	const op = "storage.postgresql.New"
 
 	psqlInfo := fmt.Sprintf(

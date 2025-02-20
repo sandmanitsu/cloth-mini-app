@@ -2,7 +2,7 @@ package main
 
 import (
 	"cloth-mini-app/internal/app"
-	"cloth-mini-app/internal/congig"
+	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/logger"
 	"log"
 	"log/slog"
