@@ -32,6 +32,7 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	e := echo.New()
 
 	rest.NewItemHandler(e, itemService)
+	rest.NewAdminHandler(e)
 
 	logger.Info("echo", sl.Err(e.Start(config.Host+":"+config.Port)))
 }

@@ -6,6 +6,7 @@ import (
 	"net/url"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type ItemService interface {
@@ -29,6 +30,7 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	}
 
 	g := e.Group("/item")
+	g.Use(middleware.Logger())
 	g.GET("/get", handler.Items)
 	g.POST("/update/:id", handler.Update)
 }
