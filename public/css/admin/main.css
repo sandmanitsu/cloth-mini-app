@@ -8,7 +8,8 @@
 
 body {
     font-family: Arial, sans-serif;
-    line-height: (1.6);
+    font-size: small;
+    line-height: (0.5);
     color: #333;
     background-color: #f9f9fa;
 }
@@ -22,7 +23,7 @@ body {
 
 #products-table th,
 #products-table td {
-    padding: 12px 15px;
+    padding: 8px 10px;
     border: 1px solid #ddd;
     text-align: left;
 }

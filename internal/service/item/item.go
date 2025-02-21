@@ -56,6 +56,7 @@ func (i *ItemService) Items(params url.Values) ([]domain.ItemAPI, error) {
 
 	items, err := i.itemRepo.Items(filter, limitInt, offsetInt)
 	if err != nil {
+		i.logger.Debug("", sl.Err(err))
 		return nil, err
 	}
 
@@ -63,35 +64,36 @@ func (i *ItemService) Items(params url.Values) ([]domain.ItemAPI, error) {
 }
 
 // Validating input params
+// todo. Как-то нужно привязывать фильтр к нужной таблице (возможно перенести в репозиторий и там валидировать -_-)
 func (i *ItemService) validateInputParams(params url.Values) map[string]interface{} {
 	filter := make(map[string]interface{})
 
 	if params.Get("id") != "" {
-		filter["id"] = params.Get("id")
+		filter["i.id"] = params.Get("id")
 	}
 	if params.Get("brand") != "" {
-		filter["brand"] = params.Get("brand")
+		filter["i.brand"] = params.Get("brand")
 	}
 	if params.Get("name") != "" {
-		filter["name"] = params.Get("name")
+		filter["i.name"] = params.Get("name")
 	}
 	if params.Get("sex") != "" {
-		filter["sex"] = params.Get("sex")
+		filter["i.sex"] = params.Get("sex")
 	}
 	if params.Get("category_type") != "" {
-		filter["category_type"] = params.Get("category_type")
+		filter["i.category_type"] = params.Get("category_type")
 	}
 	if params.Get("category_name") != "" {
-		filter["category_name"] = params.Get("category_name")
+		filter["i.category_name"] = params.Get("category_name")
 	}
 	if params.Get("price") != "" {
-		filter["price"] = params.Get("price")
+		filter["i.price"] = params.Get("price")
 	}
 	if params.Get("") != "" {
-		filter["discount"] = params.Get("discount")
+		filter["i.discount"] = params.Get("discount")
 	}
 	if params.Get("") != "" {
-		filter["outer_link"] = params.Get("outer_link")
+		filter["i.outer_link"] = params.Get("outer_link")
 	}
 
 	return filter

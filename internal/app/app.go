@@ -4,7 +4,7 @@ import (
 	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/delivery/rest"
 	sl "cloth-mini-app/internal/logger"
-	"cloth-mini-app/internal/repository"
+	repository "cloth-mini-app/internal/repository/item"
 	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
 	"log/slog"
