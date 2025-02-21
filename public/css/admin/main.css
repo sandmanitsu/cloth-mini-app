@@ -1,0 +1,86 @@
+/* [styles.css](styles.css) */
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    line-height: (1.6);
+    color: #333;
+    background-color: #f9f9fa;
+}
+
+#products-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 50px auto;
+    overflow-x: auto;
+}
+
+#products-table th,
+#products-table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+#products-table thead {
+    background-color: #f4f4f4;
+}
+
+#products-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.edit-button {
+    cursor: pointer;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.edit-button:hover {
+    background-color: #45a049;
+}
+
+@media screen and (max-width: 768px) {
+    #products-table {
+        width: 100vw;
+    }
+
+    #products-table thead {
+        display: none;
+    }
+
+    #products-table tbody tr {
+        display: block;
+        margin-bottom: 15px;
+    }
+
+    #products-table tbody tr td {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+    }
+
+    #products-table tbody tr td:first-child {
+        font-weight: bold;
+        width: 40%;
+    }
+
+    #products-table tbody tr td:last-child {
+        width: 60%;
+    }
+
+    .edit-button {
+        margin-left: auto;
+    }
+}

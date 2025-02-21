@@ -30,6 +30,7 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	itemService := item.NewItemService(logger, itemRepo)
 
 	e := echo.New()
+	e.Static("/admin/static", "public")
 
 	rest.NewItemHandler(e, itemService)
 	rest.NewAdminHandler(e)

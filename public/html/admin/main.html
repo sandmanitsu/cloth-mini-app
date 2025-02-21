@@ -3,9 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/admin/main.css">
+    <script src="static/js/admin/admin.js"></script>
     <title>admin</title>
 </head>
 <body>
-    <di>main page</di>
+    <header>
+        <div>Admin Panel</div>
+        <button class="update-btn">Загрузить товар</button>
+    </header>
+
+    <table id="products-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Бренд</th>
+            <th>Название</th>
+            <th>Описание</th>
+            <th>Категория</th>
+            <th>Цена</th>
+            <th>Ссылка</th>
+            <th></th> <!-- Колонка для кнопки -->
+          </tr>
+        </thead>
+        <tbody id="products-body">
+          <!-- Строки с товарами будут добавлены сюда -->
+        </tbody>
+      </table>
 </body>
 </html>
