@@ -3,84 +3,90 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="static/css/admin/main.css">
+    <link rel="stylesheet" href="static/css/skeleton/skeleton.css">
+    <!-- <link rel="stylesheet" href="static/css/skeleton/normalize.css"> -->
     <script src="static/js/admin/admin.js"></script>
     <title>admin</title>
 </head>
 <body>
-    <header>
-        <div>Admin Panel</div>
-        <button class="update-btn">Загрузить товар</button>
-    </header>
+    <div class="container">
+        <div class="container">
+            <div class="row">
+                <div class="three columns">
+                    <h4>Admin Panel</h4>
+                </div>
+                <button class="three columns update-btn">Загрузить товар</button>
+            </div>
+        </div>
 
-    <!-- Форма поиска -->
-    <div class="search-form">
-        <label for="id-search">ID:</label>
-        <input type="number" id="id-search" placeholder="Найти по ID" />
+        <!-- Форма поиска -->
+        <div class="row">
+            <div class="one columns">
+                <label for="id-search">ID:</label>
+                <input class="u-full-width" type="number" id="id-search" placeholder="ID" />
+            </div>
 
-        <label for="brand-search">Бренд:</label>
-        <input type="text" id="brand-search" placeholder="Найти по бренду" />
+            <div class="two columns">
+                <label for="brand-search">Бренд:</label>
+                <input class="u-full-width"  type="text" id="brand-search" placeholder="Найти по бренду" />
+            </div>
 
-        <label for="name-search">Название:</label>
-        <input type="text" id="name-search" placeholder="Найти по названию" />
+            <div class="two columns">
+                <label for="name-search">Название:</label>
+                <input class="u-full-width"  type="text" id="name-search" placeholder="Найти по названию" />
+            </div>
 
-        <label for="category-search">Категория:</label>
-        <select id="category-search">
-            <option value="">Все категории</option>
-            <option value="Толстовки">Толстовки</option>
-            <option value="Кроссовки">Кроссовки</option>
-            <option value="Лонгсливы">Лонгсливы</option>
-        </select>
+            <div class="two columns">
+                <label for="category-search">Категория:</label>
+                <select class="u-full-width"  id="category-search">
+                    <!-- Селекты с категориями будут добавлены сюда -->
+                </select>
+            </div>
 
-        <label for="gender-search">Пол:</label>
-        <select id="gender-search">
-            <option value="">Все</option>
-            <option value="Мужской">Мужской</option>
-            <option value="Женский">Женский</option>
-            <option value="Унисекс">Унисекс</option>
-        </select>
+            <div class="two columns">
+                <label for="gender-search">Пол:</label>
+                <select class="u-full-width"  id="gender-search">
+                    <option value="">Все</option>
+                    <option value="1">Мужской</option>
+                    <option value="2">Женский</option>
+                    <option value="3">Унисекс</option>
+                </select>
+            </div>
 
-        <label for="min-price-search">Минимальная цена:</label>
-        <input type="number" id="min-price-search" placeholder="Минимальная цена" />
+            <div class="two columns">
+                <label for="price">Цена:</label>
+                <input class="u-full-width"  type="number" id="price-search" placeholder="Цена" />
+            </div>
 
-        <label for="max-price-search">Максимальная цена:</label>
-        <input type="number" id="max-price-search" placeholder="Максимальная цена" />
+            <div class="one columns">
+                <label for="discount-search">Скидка:</label>
+                <input class="u-full-width"  type="number" id="discount-search" placeholder="%" />
+            </div>
 
-        <label for="discount-search">Скидка:</label>
-        <input type="number" id="discount-search" placeholder="Скидка (%)" />
+            <button class="u-full-width" onclick="performSearch()">Искать</button>
+        </div>
 
-        <label for="link-search">Ссылка:</label>
-        <input type="url" id="link-search" placeholder="Ссылка" />
-
-        <label for="created-at-search">Дата создания:</label>
-        <input type="date" id="created-at-search" />
-
-        <label for="updated-at-search">Дата обновления:</label>
-        <input type="date" id="updated-at-search" />
-
-        <button onclick="performSearch()">Искать</button>
+        <!-- Лист товаров -->
+        <table id="products-table u-full-width">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Бренд</th>
+                    <th>Название</th>
+                    <th>Категория</th>
+                    <th>Пол</th>
+                    <th>Цена</th>
+                    <th>Скидка</th>
+                    <th>Ссылка</th>
+                    <th>Созданно</th>
+                    <th>Обновленно</th>
+                    <th></th> <!-- Колонка для кнопки -->
+                </tr>
+            </thead>
+            <tbody id="products-body">
+                <!-- Строки с товарами будут добавлены сюда -->
+            </tbody>
+        </table>
     </div>
-
-    <!-- Лист товаров -->
-    <table id="products-table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Бренд</th>
-                <th>Название</th>
-                <th>Категория</th>
-                <th>Пол</th>
-                <th>Цена</th>
-                <th>Скидка</th>
-                <th>Ссылка</th>
-                <th>Созданно</th>
-                <th>Обновленно</th>
-                <th></th> <!-- Колонка для кнопки -->
-            </tr>
-        </thead>
-        <tbody id="products-body">
-            <!-- Строки с товарами будут добавлены сюда -->
-        </tbody>
-    </table>
 </body>
 </html>

@@ -16,25 +16,13 @@ async function performSearch() {
         params.append('category', document.getElementById('category-search').value);
     }
     if (document.getElementById('gender-search').value && document.getElementById('gender-search').value !== '') {
-        params.append('gender', document.getElementById('gender-search').value);
+        params.append('sex', document.getElementById('gender-search').value);
     }
-    if (document.getElementById('min-price-search').value) {
-        params.append('min_price', document.getElementById('min-price-search').value);
-    }
-    if (document.getElementById('max-price-search').value) {
-        params.append('max_price', document.getElementById('max-price-search').value);
+    if (document.getElementById('price-search').value) {
+        params.append('price', document.getElementById('price-search').value);
     }
     if (document.getElementById('discount-search').value) {
         params.append('discount', document.getElementById('discount-search').value);
-    }
-    if (document.getElementById('link-search').value) {
-        params.append('link', document.getElementById('link-search').value);
-    }
-    if (document.getElementById('created-at-search').value) {
-        params.append('created_at', document.getElementById('created-at-search').value);
-    }
-    if (document.getElementById('updated-at-search').value) {
-        params.append('updated_at', document.getElementById('updated-at-search').value);
     }
 
     fetchItems(20, 0, '&'+params.toString())
@@ -106,6 +94,30 @@ function renderItems(items) {
     });
 }
 
+async function fetchCategory() {
+    try {
+        const url = `http://localhost:8080/category/get`;
+        const response = await fetch(url)
+
+        if (!response.ok) {
+            throw new Error(`fetchCategory Ошибка HTTP: ${response.status}`)
+        }
+
+        const category = await response.json()
+        const select = document.getElementById("category-search")
+
+        let html = `<option value="">Все категории</option>`
+        category.forEach(cat => {
+            html += `<option value="${cat.category_id}">${cat.category_name}</option>`
+        })
+
+        select.insertAdjacentHTML('beforeend', html);
+    } catch (error) {
+        console.error('fetchCategory Ошибка', error.message)
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchItems()
+    fetchCategory()
 });

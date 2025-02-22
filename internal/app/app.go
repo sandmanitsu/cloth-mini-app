@@ -4,7 +4,9 @@ import (
 	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/delivery/rest"
 	sl "cloth-mini-app/internal/logger"
-	repository "cloth-mini-app/internal/repository/item"
+	categoryRepo "cloth-mini-app/internal/repository/category"
+	itemRepo "cloth-mini-app/internal/repository/item"
+	"cloth-mini-app/internal/service/category"
 	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
 	"log/slog"
@@ -24,16 +26,20 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	}
 
 	// prepare repositories
-	itemRepo := repository.NewItemRepository(logger, storage)
+	itemRepo := itemRepo.NewItemRepository(logger, storage)
+	categoryRepo := categoryRepo.NewCategoryRepository(logger, storage)
 
 	// prepare services
 	itemService := item.NewItemService(logger, itemRepo)
+	categoryService := category.NewCategoryService(logger, categoryRepo)
 
 	e := echo.New()
 	e.Static("/admin/static", "public")
 
+	// prepare handlers
 	rest.NewItemHandler(e, itemService)
 	rest.NewAdminHandler(e)
+	rest.NewCategoryHandler(e, categoryService)
 
 	logger.Info("echo", sl.Err(e.Start(config.Host+":"+config.Port)))
 }

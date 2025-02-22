@@ -64,7 +64,6 @@ func (i *ItemService) Items(params url.Values) ([]domain.ItemAPI, error) {
 }
 
 // Validating input params
-// todo. Как-то нужно привязывать фильтр к нужной таблице (возможно перенести в репозиторий и там валидировать -_-)
 func (i *ItemService) validateInputParams(params url.Values) map[string]interface{} {
 	filter := make(map[string]interface{})
 
@@ -81,10 +80,10 @@ func (i *ItemService) validateInputParams(params url.Values) map[string]interfac
 		filter["i.sex"] = params.Get("sex")
 	}
 	if params.Get("category_type") != "" {
-		filter["i.category_type"] = params.Get("category_type")
+		filter["c.category_type"] = params.Get("category_type")
 	}
 	if params.Get("category_name") != "" {
-		filter["i.category_name"] = params.Get("category_name")
+		filter["c.category_name"] = params.Get("category_name")
 	}
 	if params.Get("price") != "" {
 		filter["i.price"] = params.Get("price")
