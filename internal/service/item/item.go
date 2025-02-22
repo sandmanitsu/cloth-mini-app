@@ -15,6 +15,8 @@ type ItemRepository interface {
 	Items(filter map[string]interface{}, limit, offset uint64) ([]domain.ItemAPI, error)
 	// Update item record
 	Update(data ItemUpdateData) error
+	// Returning item by id
+	ItemById(id int) (domain.ItemAPI, error)
 }
 
 type ItemService struct {
@@ -64,14 +66,14 @@ func (i *ItemService) Items(params url.Values) ([]domain.ItemAPI, error) {
 }
 
 // Validating input params
-func (i *ItemService) validateInputParams(params url.Values) map[string]interface{} {
-	filter := make(map[string]interface{})
+func (i *ItemService) validateInputParams(params url.Values) map[string]any {
+	filter := make(map[string]any)
 
 	if params.Get("id") != "" {
 		filter["i.id"] = params.Get("id")
 	}
-	if params.Get("brand") != "" {
-		filter["i.brand"] = params.Get("brand")
+	if params.Get("brand_id") != "" {
+		filter["i.brand_id"] = params.Get("brand_id")
 	}
 	if params.Get("name") != "" {
 		filter["i.name"] = params.Get("name")
@@ -79,15 +81,24 @@ func (i *ItemService) validateInputParams(params url.Values) map[string]interfac
 	if params.Get("sex") != "" {
 		filter["i.sex"] = params.Get("sex")
 	}
+	if params.Get("category_id") != "" {
+		filter["c.id"] = params.Get("category_id")
+	}
 	if params.Get("category_type") != "" {
 		filter["c.category_type"] = params.Get("category_type")
 	}
 	if params.Get("category_name") != "" {
 		filter["c.category_name"] = params.Get("category_name")
 	}
-	if params.Get("price") != "" {
+
+	if params.Get("min_price") != "" || params.Get("max_price") != "" {
+		fmt.Println(params.Get("min_price"), params.Get("max_price"))
+		filter["min_price"] = params.Get("min_price")
+		filter["max_price"] = params.Get("max_price")
+	} else if params.Get("price") != "" {
 		filter["i.price"] = params.Get("price")
 	}
+
 	if params.Get("") != "" {
 		filter["i.discount"] = params.Get("discount")
 	}
@@ -155,4 +166,8 @@ func (i *ItemService) validateUpdateData(item rest.ItemDTO) map[string]any {
 	}
 
 	return data
+}
+
+func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
+	return i.itemRepo.ItemById(id)
 }

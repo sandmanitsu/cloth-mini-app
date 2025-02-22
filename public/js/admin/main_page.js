@@ -1,4 +1,8 @@
 
+import { optionBrands } from './brand.js';
+import { optionCategory } from './category.js';
+import { formatDate } from './date.js';
+
 async function performSearch() {
     const params = new URLSearchParams();
 
@@ -7,36 +11,28 @@ async function performSearch() {
         params.append('id', document.getElementById('id-search').value);
     }
     if (document.getElementById('brand-search').value) {
-        params.append('brand', document.getElementById('brand-search').value);
+        params.append('brand_id', document.getElementById('brand-search').value);
     }
     if (document.getElementById('name-search').value) {
         params.append('name', document.getElementById('name-search').value);
     }
     if (document.getElementById('category-search').value && document.getElementById('category-search').value !== '') {
-        params.append('category', document.getElementById('category-search').value);
+        params.append('category_id', document.getElementById('category-search').value);
     }
     if (document.getElementById('gender-search').value && document.getElementById('gender-search').value !== '') {
         params.append('sex', document.getElementById('gender-search').value);
     }
-    if (document.getElementById('price-search').value) {
-        params.append('price', document.getElementById('price-search').value);
+    if (document.getElementById('min-price-search').value) {
+        params.append('min_price', document.getElementById('min-price-search').value);
+    }
+    if (document.getElementById('max-price-search').value) {
+        params.append('max_price', document.getElementById('max-price-search').value);
     }
     if (document.getElementById('discount-search').value) {
         params.append('discount', document.getElementById('discount-search').value);
     }
 
     fetchItems(20, 0, '&'+params.toString())
-}
-
-// Форматирует дату из ISO в формат ГГГГ-ММ-ДД - ЧЧ:ММ:СС
-function formatDate(dt) {
-    if (!dt) {
-        return ""
-    }
-
-    const date = new Date(dt);
-
-    return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} - ${date.toLocaleTimeString()}`;
 }
 
 // Получение списка товаров
@@ -52,7 +48,7 @@ async function fetchItems(limit = 20, offset = 0, queryParams = "") {
         const items = await response.json()
         renderItems(items)
     } catch (error) {
-        console.error('fetchItems Ошибка', error.message)
+        console.error('fetchItems Ошибка', error.message, error)
     }
 }
 
@@ -63,6 +59,7 @@ function renderItems(items) {
     container.innerHTML = ''
 
     items.items.forEach((product) => {
+        let sex = ''
         switch (product.sex) {
             case 1:
                 sex = 'муж';
@@ -78,7 +75,7 @@ function renderItems(items) {
         const itemCard = `
         <tr>
             <td>${product.id}</td>
-            <td>${product.brand}</td>
+            <td>${product.brand_name}</td>
             <td>${product.name}</td>
             <td>${product.category_name}</td>
             <td>${sex}</td>
@@ -87,37 +84,18 @@ function renderItems(items) {
             <td><a href="${product.outer_link}" target="_blank">Товар в магазине</a></td>
             <td>${formatDate(product.created_at)}</td>
             <td>${formatDate(product.updated_at)}</td>
-            <td><button class="edit-button">Редактировать</button></td>
+            <td><a class="button button-primary" href="update/${product.id}">Редактировать</a></td>
         </tr>`;
 
     container.insertAdjacentHTML('beforeend', itemCard);
     });
 }
 
-async function fetchCategory() {
-    try {
-        const url = `http://localhost:8080/category/get`;
-        const response = await fetch(url)
-
-        if (!response.ok) {
-            throw new Error(`fetchCategory Ошибка HTTP: ${response.status}`)
-        }
-
-        const category = await response.json()
-        const select = document.getElementById("category-search")
-
-        let html = `<option value="">Все категории</option>`
-        category.forEach(cat => {
-            html += `<option value="${cat.category_id}">${cat.category_name}</option>`
-        })
-
-        select.insertAdjacentHTML('beforeend', html);
-    } catch (error) {
-        console.error('fetchCategory Ошибка', error.message)
-    }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
     fetchItems()
-    fetchCategory()
+    optionCategory(document.getElementById("category-search"))
+    optionBrands(document.getElementById("brand-search"))
+
+    const searchBtn = document.getElementById("search_btn")
+    searchBtn.addEventListener('click', performSearch)
 });

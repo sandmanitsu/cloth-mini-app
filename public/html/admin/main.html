@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="static/css/skeleton/skeleton.css">
     <!-- <link rel="stylesheet" href="static/css/skeleton/normalize.css"> -->
-    <script src="static/js/admin/admin.js"></script>
+    <script type = "module" src="static/js/admin/main_page.js"></script>
     <title>admin</title>
 </head>
 <body>
@@ -20,50 +20,59 @@
         </div>
 
         <!-- Форма поиска -->
-        <div class="row">
-            <div class="one columns">
-                <label for="id-search">ID:</label>
-                <input class="u-full-width" type="number" id="id-search" placeholder="ID" />
-            </div>
+        <div class="container">
+            <div class="row">
+                <div class="one columns">
+                    <label for="id-search">ID:</label>
+                    <input class="u-full-width" type="number" id="id-search" placeholder="ID" />
+                </div>
 
-            <div class="two columns">
-                <label for="brand-search">Бренд:</label>
-                <input class="u-full-width"  type="text" id="brand-search" placeholder="Найти по бренду" />
-            </div>
+                <div class="two columns">
+                    <label for="brand-search">Бренд:</label>
+                    <select class="u-full-width"  id="brand-search">
+                        <!-- Селекты с брендами будут добавлены сюда -->
+                    </select>
+                </div>
 
-            <div class="two columns">
-                <label for="name-search">Название:</label>
-                <input class="u-full-width"  type="text" id="name-search" placeholder="Найти по названию" />
-            </div>
+                <div class="three columns">
+                    <label for="name-search">Название:</label>
+                    <input class="u-full-width"  type="text" id="name-search" placeholder="Найти по названию" />
+                </div>
 
-            <div class="two columns">
-                <label for="category-search">Категория:</label>
-                <select class="u-full-width"  id="category-search">
-                    <!-- Селекты с категориями будут добавлены сюда -->
-                </select>
-            </div>
+                <div class="two columns">
+                    <label for="category-search">Категория:</label>
+                    <select class="u-full-width"  id="category-search">
+                        <!-- Селекты с категориями будут добавлены сюда -->
+                    </select>
+                </div>
 
-            <div class="two columns">
-                <label for="gender-search">Пол:</label>
-                <select class="u-full-width"  id="gender-search">
-                    <option value="">Все</option>
-                    <option value="1">Мужской</option>
-                    <option value="2">Женский</option>
-                    <option value="3">Унисекс</option>
-                </select>
-            </div>
+                <div class="one columns">
+                    <label for="gender-search">Пол:</label>
+                    <select class="u-full-width"  id="gender-search">
+                        <option value=""></option>
+                        <option value="1">Мужской</option>
+                        <option value="2">Женский</option>
+                        <option value="3">Унисекс</option>
+                    </select>
+                </div>
 
-            <div class="two columns">
-                <label for="price">Цена:</label>
-                <input class="u-full-width"  type="number" id="price-search" placeholder="Цена" />
-            </div>
+                <div class="one columns">
+                    <label for="price">Мин:</label>
+                    <input class="u-full-width"  type="number" id="min-price-search" placeholder="Цена" />
+                </div>
 
-            <div class="one columns">
-                <label for="discount-search">Скидка:</label>
-                <input class="u-full-width"  type="number" id="discount-search" placeholder="%" />
-            </div>
+                <div class="one columns">
+                    <label for="price">Макс:</label>
+                    <input class="u-full-width"  type="number" id="max-price-search" placeholder="Цена" />
+                </div>
 
-            <button class="u-full-width" onclick="performSearch()">Искать</button>
+                <div class="one columns">
+                    <label for="discount-search">Скидка:</label>
+                    <input class="u-full-width"  type="number" id="discount-search" placeholder="%" />
+                </div>
+
+                <button class="u-full-width" id="search_btn">Искать</button>
+            </div>
         </div>
 
         <!-- Лист товаров -->

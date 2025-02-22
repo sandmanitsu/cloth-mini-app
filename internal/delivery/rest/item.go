@@ -2,6 +2,8 @@ package rest
 
 import (
 	"cloth-mini-app/internal/domain"
+	"database/sql"
+	"errors"
 	"net/http"
 	"net/url"
 
@@ -12,6 +14,7 @@ import (
 type ItemService interface {
 	// Fetching items
 	Items(params url.Values) ([]domain.ItemAPI, error)
+	ItemById(id int) (domain.ItemAPI, error)
 	Update(iten ItemDTO) error
 }
 
@@ -32,6 +35,7 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	g := e.Group("/item")
 	g.Use(middleware.Logger())
 	g.GET("/get", handler.Items)
+	g.GET("/get/:id", handler.ItemById)
 	g.POST("/update/:id", handler.Update)
 }
 
@@ -45,12 +49,12 @@ func (i *ItemHandler) Items(c echo.Context) error {
 	request := c.Request()
 	err := request.ParseForm()
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: parse query params"})
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "parse query params"})
 	}
 
 	items, err := i.Service.Items(request.Form)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: getting items"})
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "getting items"})
 	}
 
 	return c.JSON(http.StatusOK, ItemResponse{
@@ -80,7 +84,7 @@ func (i *ItemHandler) Update(c echo.Context) error {
 	var item ItemDTO
 	err := c.Bind(&item)
 	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "error: binding params"})
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
 	i.Service.Update(item)
@@ -88,4 +92,26 @@ func (i *ItemHandler) Update(c echo.Context) error {
 	return c.JSON(http.StatusOK, ItemUpdateResponse{
 		Success: true,
 	})
+}
+
+type ItemId struct {
+	Id int `param:"id"`
+}
+
+func (i *ItemHandler) ItemById(c echo.Context) error {
+	var itemId ItemId
+	err := c.Bind(&itemId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
+	}
+
+	item, err := i.Service.ItemById(itemId.Id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "no records with provided id"})
+		}
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "failed getting item"})
+	}
+
+	return c.JSON(http.StatusOK, item)
 }

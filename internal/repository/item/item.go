@@ -40,13 +40,40 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
 
-	q := psql.Select("i.id", "i.brand", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "c.type", "c.name AS category_name", "i.created_at", "i.updated_at").
+	q := psql.Select("i.id", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "i.created_at", "i.updated_at", "c.type", "c.name AS category_name", "b.name").
 		From("items i").
+		LeftJoin("brand b on i.brand_id = b.id").
 		LeftJoin("category c on i.category_id = c.id").
-		Where(filter).
+		// Where(filter).
 		Limit(limit).
 		Offset(offset)
+
+	minPrice, minPriceOk := filter["min_price"]
+	maxPrice, maxPriceOk := filter["max_price"]
+	if minPriceOk || maxPriceOk {
+		if minPrice.(string) == "" {
+			minPrice = "0"
+		}
+		if maxPrice.(string) == "" {
+			maxPrice = "99999999"
+		}
+
+		q = q.Where(squirrel.Expr("i.price BETWEEN ? AND ?", minPrice, maxPrice))
+
+		delete(filter, "min_price")
+		delete(filter, "max_price")
+	}
+
+	name, nameOk := filter["i.name"]
+	if nameOk {
+		q = q.Where(squirrel.Expr("i.name LIKE ?", fmt.Sprintf("%%%v%%", name)))
+		delete(filter, "i.name")
+	}
+
+	q = q.Where(filter)
+
 	sql, args, _ := q.ToSql()
+	fmt.Println(sql, args, filter)
 
 	rows, err := i.db.Query(sql, args...)
 	if err != nil {
@@ -59,7 +86,20 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	var items []domain.ItemAPI
 	for rows.Next() {
 		var item domain.ItemAPI
-		if err := rows.Scan(&item.ID, &item.Brand, &item.Name, &item.Description, &item.Sex, &item.Price, &item.Discount, &item.OuterLink, &item.CategoryType, &item.CategoryName, &item.CreatedAt, &item.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&item.ID,
+			&item.Name,
+			&item.Description,
+			&item.Sex,
+			&item.Price,
+			&item.Discount,
+			&item.OuterLink,
+			&item.CreatedAt,
+			&item.UpdatedAt,
+			&item.CategoryType,
+			&item.CategoryName,
+			&item.BrandName,
+		); err != nil {
 			i.logger.Error(op, sl.Err(err))
 
 			return nil, err
@@ -93,4 +133,44 @@ func (i *ItemRepository) Update(data item.ItemUpdateData) error {
 	}
 
 	return nil
+}
+
+func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
+	const op = "repository.item.ItemById"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	sql, args, err := psql.Select("i.id", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "i.created_at", "i.updated_at", "c.type", "c.name AS category_name", "b.name").
+		From("items i").
+		LeftJoin("brand b on i.brand_id = b.id").
+		LeftJoin("category c on i.category_id = c.id").
+		Where(squirrel.Expr("i.id = ?", id)).
+		ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return domain.ItemAPI{}, err
+	}
+
+	var item domain.ItemAPI
+	err = i.db.QueryRow(sql, args...).Scan(
+		&item.ID,
+		&item.Name,
+		&item.Description,
+		&item.Sex,
+		&item.Price,
+		&item.Discount,
+		&item.OuterLink,
+		&item.CreatedAt,
+		&item.UpdatedAt,
+		&item.CategoryType,
+		&item.CategoryName,
+		&item.BrandName,
+	)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return domain.ItemAPI{}, err
+	}
+
+	return item, nil
 }
