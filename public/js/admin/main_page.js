@@ -73,7 +73,7 @@ function renderItems(items) {
         }
 
         const itemCard = `
-        <tr>
+        <tr class="product">
             <td>${product.id}</td>
             <td>${product.brand_name}</td>
             <td>${product.name}</td>
@@ -91,6 +91,32 @@ function renderItems(items) {
     });
 }
 
+function fetchNextItems() {
+    let currOffset = document.getElementById("offset-counter")
+
+    if (document.getElementsByClassName("product").length !== 20) {
+        return
+    }
+
+    let offset = parseInt(currOffset.innerHTML)+20
+    fetchItems(20, offset, "")
+
+    currOffset.innerHTML = offset
+}
+
+function fetchPrevItems() {
+    let currOffset = document.getElementById("offset-counter")
+
+    if (parseInt(currOffset.innerHTML) == 0) {
+        return
+    }
+
+    let offset = parseInt(currOffset.innerHTML)-20
+    fetchItems(20, offset, "")
+
+    currOffset.innerHTML = offset
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchItems()
     optionCategory(document.getElementById("category-search"))
@@ -98,4 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const searchBtn = document.getElementById("search_btn")
     searchBtn.addEventListener('click', performSearch)
+
+    const nextBtn = document.getElementById("next_btn")
+    nextBtn.addEventListener('click', fetchNextItems)
+
+    const prevBtn = document.getElementById("prev_btn")
+    prevBtn.addEventListener('click', fetchPrevItems)
 });
