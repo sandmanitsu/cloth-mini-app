@@ -17,6 +17,8 @@ type ItemRepository interface {
 	Update(data ItemUpdateData) error
 	// Returning item by id
 	ItemById(id int) (domain.ItemAPI, error)
+	// Create item
+	Create(item rest.ItemCreateDTO) error
 }
 
 type ItemService struct {
@@ -140,8 +142,8 @@ func (i *ItemService) Update(item rest.ItemDTO) error {
 func (i *ItemService) validateUpdateData(item rest.ItemDTO) map[string]any {
 	data := make(map[string]any)
 
-	if item.Brand != nil {
-		data["brand"] = *item.Brand
+	if item.BrandId != nil {
+		data["brand_id"] = *item.BrandId
 	}
 	if item.Name != nil {
 		data["name"] = *item.Name
@@ -170,4 +172,8 @@ func (i *ItemService) validateUpdateData(item rest.ItemDTO) map[string]any {
 
 func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
 	return i.itemRepo.ItemById(id)
+}
+
+func (i *ItemService) Create(item rest.ItemCreateDTO) error {
+	return i.itemRepo.Create(item)
 }

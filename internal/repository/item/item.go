@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"cloth-mini-app/internal/delivery/rest"
 	"cloth-mini-app/internal/domain"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/service/item"
@@ -139,7 +140,7 @@ func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
 	const op = "repository.item.ItemById"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	sql, args, err := psql.Select("i.id", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "i.created_at", "i.updated_at", "c.type", "c.name AS category_name", "b.name").
+	sql, args, err := psql.Select("i.id", "i.name", "i.description", "i.sex", "i.price", "i.discount", "i.outer_link", "i.created_at", "i.updated_at", "c.id as category_id", "c.type", "c.name AS category_name", "b.id as brand_id", "b.name").
 		From("items i").
 		LeftJoin("brand b on i.brand_id = b.id").
 		LeftJoin("category c on i.category_id = c.id").
@@ -162,8 +163,10 @@ func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
 		&item.OuterLink,
 		&item.CreatedAt,
 		&item.UpdatedAt,
+		&item.CategoryId,
 		&item.CategoryType,
 		&item.CategoryName,
+		&item.BrandId,
 		&item.BrandName,
 	)
 	if err != nil {
@@ -173,4 +176,31 @@ func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
 	}
 
 	return item, nil
+}
+
+func (i *ItemRepository) Create(item rest.ItemCreateDTO) error {
+	const op = "repository.item.Create"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Insert("items").
+		Columns("brand_id", "name", "description", "sex", "category_id", "price", "discount", "outer_link", "created_at").
+		Values(item.BrandId, item.Name, item.Description, item.Sex, item.CategoryId, item.Price, item.Discount, item.OuterLink, time.Now())
+
+	sql, args, err := psql.ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
+
+	fmt.Println(sql, args)
+
+	_, err = i.db.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	return nil
 }

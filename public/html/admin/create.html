@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="static/css/skeleton/skeleton.css">
+    <!-- <link rel="stylesheet" href="static/css/skeleton/normalize.css"> -->
+    <script type = "module" src="static/js/admin/create_page.js"></script>
+    <title>admin - creating</title>
+</head>
+<body>
+    <div class="container">
+        <div class="container">
+            <div class="row">
+                <div class="three columns">
+                    <h4>Admin Panel</h4>
+                </div>
+        </div>
+    </div>
+
+        <div id="item">
+            <div class="container">
+                <div class="four columns">
+                    <div class="row">
+                        <img src="static/img/cardigan_mock.jpg" width="100%" height="auto" alt="mock image">
+                        <button class="u-full-width" id="update_btn">Загрузить изображение</button>
+                    </div>
+                </div>
+
+                <div class="eight columns">
+                    <div class="five columns">
+                        <label for="brand">Бренд:</label>
+                        <select class="u-full-width" id="brand">
+                            <!-- Сюда добавлются бренды -->
+                        </select>
+                    </div>
+
+                    <div class="seven columns">
+                        <label for="item-name">Название:</label>
+                        <input class="u-full-width" type="text" id="item-name" placeholder="Название товара">
+                    </div>
+                </div>
+
+                <div class="eight columns">
+                    <div class="five columns">
+                        <label for="category">Категория:</label>
+                        <select class="u-full-width" id="category">
+                            <!-- Сюда добавлются категории -->
+                        </select>
+                    </div>
+
+                    <div class="two columns">
+                        <label for="gender">Пол:</label>
+                        <select class="u-full-width" id="gender">
+                            <option value="1">Мужской</option>
+                            <option value="2">Женский</option>
+                            <option value="3">Унисекс</option>
+                        </select>
+                    </div>
+
+                    <div class="three columns">
+                        <label for="price">Цена:</label>
+                        <input class="u-full-width" type="number" id="price" placeholder="Цена">
+                    </div>
+
+                    <div class="two columns">
+                        <label for="discount">Скидка:</label>
+                        <input class="u-full-width" type="number" id="discount" placeholder="Скидка">
+                    </div>
+                </div>
+
+                <div class="eight columns">
+                    <label for="outer-link">Ссылка на товар в магазине:</label>
+                    <input class="u-full-width" type="text" id="outer-link" placeholder="Ссылка">
+                </div>
+
+                <div class="eight columns">
+                    <label for="description">Описание:</label>
+                    <textarea id="description" cols="50" rows="5" placeholder="Описание товара..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <button class="u-full-width" id="create_btn">Создать</button>
+        </div>
+
+        <div class="container">
+            <a class="u-full-width button button-primary" href="/admin/">Назад</a>
+        </div>
+    </div>
+</body>
+</html>

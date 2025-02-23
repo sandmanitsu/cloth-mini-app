@@ -20,10 +20,12 @@ type Item struct {
 // item model with field from category table
 type ItemAPI struct {
 	ID           uint       `json:"id"`
+	BrandId      uint       `json:"brand_id"`
 	BrandName    string     `json:"brand_name"`
 	Name         string     `json:"name"`
 	Description  string     `json:"description"`
 	Sex          int        `json:"sex"`
+	CategoryId   int        `json:"category_id"`
 	CategoryType int        `json:"category_type"`
 	CategoryName string     `json:"category_name"`
 	Price        int        `json:"price"`

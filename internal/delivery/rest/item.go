@@ -4,9 +4,11 @@ import (
 	"cloth-mini-app/internal/domain"
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
@@ -14,8 +16,12 @@ import (
 type ItemService interface {
 	// Fetching items
 	Items(params url.Values) ([]domain.ItemAPI, error)
+	// Getting item by ID
 	ItemById(id int) (domain.ItemAPI, error)
+	// Update item data
 	Update(iten ItemDTO) error
+	// Create item
+	Create(item ItemCreateDTO) error
 }
 
 type ItemHandler struct {
@@ -37,6 +43,7 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	g.GET("/get", handler.Items)
 	g.GET("/get/:id", handler.ItemById)
 	g.POST("/update/:id", handler.Update)
+	g.POST("/create", handler.Create)
 }
 
 type ItemResponse struct {
@@ -65,13 +72,13 @@ func (i *ItemHandler) Items(c echo.Context) error {
 
 type ItemDTO struct {
 	ID          int     `param:"id"`
-	Brand       *string `json:"brand"`
+	BrandId     *int    `json:"brand_id"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 	Sex         *int    `json:"sex"`
 	CategoryId  *int    `json:"category_id"`
-	Price       *int    `json:"price"`
-	Discount    *int    `json:"discount"`
+	Price       *uint   `json:"price"`
+	Discount    *uint   `json:"discount"`
 	OuterLink   *string `json:"outerlink"`
 }
 
@@ -114,4 +121,41 @@ func (i *ItemHandler) ItemById(c echo.Context) error {
 	}
 
 	return c.JSON(http.StatusOK, item)
+}
+
+type ItemCreateDTO struct {
+	BrandId     int    `json:"brand_id" validate:"required"`
+	Name        string `json:"name" validate:"required"`
+	Description string `json:"description" validate:"required"`
+	Sex         int    `json:"sex" validate:"required"`
+	CategoryId  int    `json:"category_id" validate:"required"`
+	Price       uint   `json:"price" validate:"required"`
+	Discount    uint   `json:"discount"`
+	OuterLink   string `json:"outer_link" validate:"required"`
+}
+
+type ItemCreateResponse struct {
+	Success bool `json:"create"`
+}
+
+func (i *ItemHandler) Create(c echo.Context) error {
+	var item ItemCreateDTO
+	err := c.Bind(&item)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
+	}
+
+	validate := validator.New(validator.WithRequiredStructEnabled())
+	if err := validate.Struct(item); err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: fmt.Sprintf("validation params : %s", err)})
+	}
+
+	err = i.Service.Create(item)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "failed creating item"})
+	}
+
+	return c.JSON(http.StatusOK, ItemCreateResponse{
+		Success: true,
+	})
 }

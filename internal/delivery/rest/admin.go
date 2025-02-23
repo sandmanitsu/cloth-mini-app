@@ -51,6 +51,7 @@ func NewAdminHandler(e *echo.Echo) {
 
 	g.GET("/", handler.AdminMainPage)
 	g.GET("/update/:id", handler.AdminUpdatePage)
+	g.GET("/create", handler.AdminCreatePage)
 }
 
 func (a *AdminHandler) AdminMainPage(c echo.Context) error {
@@ -59,4 +60,8 @@ func (a *AdminHandler) AdminMainPage(c echo.Context) error {
 
 func (a *AdminHandler) AdminUpdatePage(c echo.Context) error {
 	return c.Render(http.StatusOK, "update.html", nil)
+}
+
+func (a *AdminHandler) AdminCreatePage(c echo.Context) error {
+	return c.Render(http.StatusOK, "create.html", nil)
 }
