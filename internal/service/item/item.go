@@ -1,8 +1,8 @@
 package item
 
 import (
-	"cloth-mini-app/internal/delivery/rest"
 	"cloth-mini-app/internal/domain"
+	"cloth-mini-app/internal/dto"
 	sl "cloth-mini-app/internal/logger"
 	"fmt"
 	"log/slog"
@@ -18,7 +18,7 @@ type ItemRepository interface {
 	// Returning item by id
 	ItemById(id int) (domain.ItemAPI, error)
 	// Create item
-	Create(item rest.ItemCreateDTO) error
+	Create(item dto.ItemCreateDTO) error
 }
 
 type ItemService struct {
@@ -117,7 +117,7 @@ type ItemUpdateData struct {
 }
 
 // Prepare data to update
-func (i *ItemService) Update(item rest.ItemDTO) error {
+func (i *ItemService) Update(item dto.ItemDTO) error {
 	if item.ID == 0 {
 		return fmt.Errorf("error: empty or invalid id")
 	}
@@ -139,7 +139,7 @@ func (i *ItemService) Update(item rest.ItemDTO) error {
 }
 
 // Validating input update params
-func (i *ItemService) validateUpdateData(item rest.ItemDTO) map[string]any {
+func (i *ItemService) validateUpdateData(item dto.ItemDTO) map[string]any {
 	data := make(map[string]any)
 
 	if item.BrandId != nil {
@@ -174,6 +174,6 @@ func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
 	return i.itemRepo.ItemById(id)
 }
 
-func (i *ItemService) Create(item rest.ItemCreateDTO) error {
+func (i *ItemService) Create(item dto.ItemCreateDTO) error {
 	return i.itemRepo.Create(item)
 }

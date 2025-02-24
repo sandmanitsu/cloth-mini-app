@@ -2,6 +2,7 @@ package rest
 
 import (
 	"cloth-mini-app/internal/domain"
+	"cloth-mini-app/internal/dto"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -19,9 +20,9 @@ type ItemService interface {
 	// Getting item by ID
 	ItemById(id int) (domain.ItemAPI, error)
 	// Update item data
-	Update(iten ItemDTO) error
+	Update(iten dto.ItemDTO) error
 	// Create item
-	Create(item ItemCreateDTO) error
+	Create(item dto.ItemCreateDTO) error
 }
 
 type ItemHandler struct {
@@ -70,25 +71,13 @@ func (i *ItemHandler) Items(c echo.Context) error {
 	})
 }
 
-type ItemDTO struct {
-	ID          int     `param:"id"`
-	BrandId     *int    `json:"brand_id"`
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Sex         *int    `json:"sex"`
-	CategoryId  *int    `json:"category_id"`
-	Price       *uint   `json:"price"`
-	Discount    *uint   `json:"discount"`
-	OuterLink   *string `json:"outerlink"`
-}
-
 type ItemUpdateResponse struct {
 	Success bool `json:"update"`
 }
 
 // POST /item/update/:id Update item with provided id (required) and updating params
 func (i *ItemHandler) Update(c echo.Context) error {
-	var item ItemDTO
+	var item dto.ItemDTO
 	err := c.Bind(&item)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
@@ -123,23 +112,12 @@ func (i *ItemHandler) ItemById(c echo.Context) error {
 	return c.JSON(http.StatusOK, item)
 }
 
-type ItemCreateDTO struct {
-	BrandId     int    `json:"brand_id" validate:"required"`
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Sex         int    `json:"sex" validate:"required"`
-	CategoryId  int    `json:"category_id" validate:"required"`
-	Price       uint   `json:"price" validate:"required"`
-	Discount    uint   `json:"discount"`
-	OuterLink   string `json:"outer_link" validate:"required"`
-}
-
 type ItemCreateResponse struct {
 	Success bool `json:"create"`
 }
 
 func (i *ItemHandler) Create(c echo.Context) error {
-	var item ItemCreateDTO
+	var item dto.ItemCreateDTO
 	err := c.Bind(&item)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})

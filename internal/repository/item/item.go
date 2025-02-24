@@ -1,8 +1,8 @@
 package repository
 
 import (
-	"cloth-mini-app/internal/delivery/rest"
 	"cloth-mini-app/internal/domain"
+	"cloth-mini-app/internal/dto"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
@@ -178,7 +178,7 @@ func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
 	return item, nil
 }
 
-func (i *ItemRepository) Create(item rest.ItemCreateDTO) error {
+func (i *ItemRepository) Create(item dto.ItemCreateDTO) error {
 	const op = "repository.item.Create"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
