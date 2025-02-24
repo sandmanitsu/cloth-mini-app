@@ -29,10 +29,6 @@ type ItemHandler struct {
 	Service ItemService
 }
 
-type ErrorResponse struct {
-	Err string `json:"error"`
-}
-
 // Create item handler object
 func NewItemHandler(e *echo.Echo, srv ItemService) {
 	handler := &ItemHandler{
