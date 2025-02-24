@@ -6,7 +6,7 @@ import (
 )
 
 type MinioClient interface {
-	Create(file []byte) (string, error)
+	CreateImage(file []byte) (string, error)
 }
 
 type ImageRepository interface {
@@ -27,8 +27,9 @@ func NewImageService(logger *slog.Logger, storage MinioClient, imageRepo ImageRe
 	}
 }
 
-func (i *ImageService) Create(itemId int, file []byte) error {
-	url, err := i.storage.Create(file)
+// todo. Возвращать ссылку на изображение
+func (i *ImageService) CreateItemImage(itemId int, file []byte) error {
+	url, err := i.storage.CreateImage(file)
 	if err != nil {
 		i.logger.Error("failet store image", sl.Err(err))
 		return err

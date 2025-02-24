@@ -60,7 +60,7 @@ function renderItem(item, brands, category) {
             <div class="container">
                 <div class="four columns">
                     <div class="row">
-                        <img src="../static/img/cardigan_mock.jpg" width="100%" height="auto" alt="mock image">
+                        <img src="../static/img/no_image.jpg" width="100%" height="auto" alt="mock image">
                         <button class="u-full-width" id="update_btn">Обновить изображение</button>
                     </div>
                 </div>

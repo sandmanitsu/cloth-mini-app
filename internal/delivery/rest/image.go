@@ -11,7 +11,7 @@ import (
 )
 
 type ImageService interface {
-	Create(itemId int, file []byte) error
+	CreateItemImage(itemId int, file []byte) error
 }
 
 type ImageHandler struct {
@@ -26,10 +26,10 @@ func NewImageHandler(e *echo.Echo, srv ImageService) {
 	g := e.Group("/image")
 	g.Use(middleware.Logger())
 
-	g.POST("/create", handler.Create)
+	g.POST("/create", handler.CreateItemImage)
 }
 
-func (i *ImageHandler) Create(c echo.Context) error {
+func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 	request := c.Request()
 	err := request.ParseForm()
 	if err != nil {
@@ -70,7 +70,7 @@ func (i *ImageHandler) Create(c echo.Context) error {
 		})
 	}
 
-	if err = i.Service.Create(itemId, imageBytes); err != nil {
+	if err = i.Service.CreateItemImage(itemId, imageBytes); err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image",
 		})

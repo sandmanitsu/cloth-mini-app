@@ -40,6 +40,7 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
+		// fmt.Println(client.SetBucketPolicy(ctx, cfg.BucketName))
 	}
 
 	return &MinioClient{
@@ -49,13 +50,15 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 }
 
 // Put image to store and return url to the image
-func (m *MinioClient) Create(file []byte) (string, error) {
+func (m *MinioClient) CreateImage(file []byte) (string, error) {
 	const op = "storage.minio.Create"
 
 	objectID := uuid.New().String()
 
 	reader := bytes.NewReader(file)
-	_, err := m.cl.PutObject(context.Background(), m.bucketName, objectID, reader, int64(len(file)), minio.PutObjectOptions{})
+	_, err := m.cl.PutObject(context.Background(), m.bucketName, objectID, reader, int64(len(file)), minio.PutObjectOptions{
+		ContentType: "image/jpeg",
+	})
 	if err != nil {
 		return "", fmt.Errorf("%s: %w", op, err)
 	}
