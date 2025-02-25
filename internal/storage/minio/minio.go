@@ -5,9 +5,8 @@ import (
 	"cloth-mini-app/internal/config"
 	"context"
 	"fmt"
-	"time"
+	"io"
 
-	"github.com/google/uuid"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
 )
@@ -40,7 +39,6 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
-		// fmt.Println(client.SetBucketPolicy(ctx, cfg.BucketName))
 	}
 
 	return &MinioClient{
@@ -50,23 +48,39 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 }
 
 // Put image to store and return url to the image
-func (m *MinioClient) CreateImage(file []byte) (string, error) {
-	const op = "storage.minio.Create"
-
-	objectID := uuid.New().String()
+func (m *MinioClient) CreateImage(file []byte, objectID string) error {
+	const op = "storage.minio.CreateImage"
 
 	reader := bytes.NewReader(file)
 	_, err := m.cl.PutObject(context.Background(), m.bucketName, objectID, reader, int64(len(file)), minio.PutObjectOptions{
 		ContentType: "image/jpeg",
 	})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	url, err := m.cl.PresignedGetObject(context.Background(), m.bucketName, objectID, time.Second*60*60*24, nil)
+	return nil
+}
+
+func (m *MinioClient) GetImage(objectId string) ([]byte, error) {
+	const op = "storage.minio.GetImage"
+
+	obj, err := m.cl.GetObject(context.Background(), m.bucketName, objectId, minio.GetObjectOptions{})
 	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+	defer obj.Close()
+
+	objInfo, err := obj.Stat()
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return url.String(), nil
+	buffer := make([]byte, objInfo.Size)
+	_, err = obj.Read(buffer)
+	if err != nil && err != io.EOF {
+		return nil, fmt.Errorf("%s: %w", op, err)
+	}
+
+	return buffer, nil
 }

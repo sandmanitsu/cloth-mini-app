@@ -22,13 +22,13 @@ func NewImageRepository(logger *slog.Logger, db *postgresql.Storage) *ImageRepos
 	}
 }
 
-func (i *ImageRepository) Insert(itemId int, url string) error {
+func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	const op = "repository.image.Insert"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("images").
-		Columns("item_id", "url").
-		Values(itemId, url)
+		Columns("item_id", "object_id").
+		Values(itemId, objectId)
 
 	sql, args, err := psql.ToSql()
 	if err != nil {
