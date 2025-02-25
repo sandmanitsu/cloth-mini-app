@@ -40,7 +40,7 @@ CREATE TABLE IF NOT EXISTS public.images (
     item_id int NOT NULL,
 	object_id text NOT NULL,
 	CONSTRAINT images_pk PRIMARY KEY (id),
-    FOREIGN KEY (item_id) REFERENCES public.items (id) ON UPDATE CASCADE ON DELETE CASCADE
+    FOREIGN KEY (item_id) REFERENCES public.items (id) ON UPDATE CASCADE
 );
 
 -- Inset data

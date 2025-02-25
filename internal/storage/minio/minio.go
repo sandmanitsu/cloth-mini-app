@@ -3,12 +3,17 @@ package minio
 import (
 	"bytes"
 	"cloth-mini-app/internal/config"
+	"cloth-mini-app/internal/dto"
 	"context"
 	"fmt"
 	"io"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
+)
+
+const (
+	ImageContentType = "image/jpeg"
 )
 
 type MinioClient struct {
@@ -47,13 +52,13 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 	}, nil
 }
 
-// Put image to store and return url to the image
-func (m *MinioClient) CreateImage(file []byte, objectID string) error {
+// Put file to store
+func (m *MinioClient) Put(file dto.FileDTO) error {
 	const op = "storage.minio.CreateImage"
 
-	reader := bytes.NewReader(file)
-	_, err := m.cl.PutObject(context.Background(), m.bucketName, objectID, reader, int64(len(file)), minio.PutObjectOptions{
-		ContentType: "image/jpeg",
+	reader := bytes.NewReader(file.Buffer)
+	_, err := m.cl.PutObject(context.Background(), m.bucketName, file.ID, reader, int64(len(file.Buffer)), minio.PutObjectOptions{
+		ContentType: file.ContentType,
 	})
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
@@ -62,25 +67,30 @@ func (m *MinioClient) CreateImage(file []byte, objectID string) error {
 	return nil
 }
 
-func (m *MinioClient) GetImage(objectId string) ([]byte, error) {
+// Get file from storage
+func (m *MinioClient) Get(objectId string) (dto.FileDTO, error) {
 	const op = "storage.minio.GetImage"
 
 	obj, err := m.cl.GetObject(context.Background(), m.bucketName, objectId, minio.GetObjectOptions{})
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return dto.FileDTO{}, fmt.Errorf("%s: %w", op, err)
 	}
 	defer obj.Close()
 
 	objInfo, err := obj.Stat()
 	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return dto.FileDTO{}, fmt.Errorf("%s: %w", op, err)
 	}
 
 	buffer := make([]byte, objInfo.Size)
 	_, err = obj.Read(buffer)
 	if err != nil && err != io.EOF {
-		return nil, fmt.Errorf("%s: %w", op, err)
+		return dto.FileDTO{}, fmt.Errorf("%s: %w", op, err)
 	}
 
-	return buffer, nil
+	return dto.FileDTO{
+		ID:          objectId,
+		ContentType: objInfo.ContentType,
+		Buffer:      buffer,
+	}, nil
 }

@@ -33,4 +33,5 @@ type ItemAPI struct {
 	OuterLink    string     `json:"outer_link"`
 	CreatedAt    time.Time  `json:"created_at"`
 	UpdatedAt    *time.Time `json:"updated_at"`
+	ImageId      []string   `json:"image_id"`
 }
