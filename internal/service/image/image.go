@@ -122,7 +122,7 @@ func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
 	}
 
 	if len(errors) > 0 {
-		i.logger.Error("failed getting files", errors)
+		i.logger.Error("failed getting files", sl.Err(fmt.Errorf("%v", errors))) // todo. %v????
 		return nil, fmt.Errorf("failed getting files")
 	}
 
