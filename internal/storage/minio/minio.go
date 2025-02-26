@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"sync"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -93,4 +94,62 @@ func (m *MinioClient) Get(objectId string) (dto.FileDTO, error) {
 		ContentType: objInfo.ContentType,
 		Buffer:      buffer,
 	}, nil
+}
+
+// Get many files from storage
+// Use worker pull with 10 workers (amount workers - workersCnt)
+func (m *MinioClient) GetMany(objectIds []string) ([]dto.FileDTO, error) {
+	_, cancel := context.WithCancel(context.Background())
+
+	workersCnt := 10
+	var worker = func(objectIdCh <-chan string, fileCh chan<- dto.FileDTO, errCh chan<- error, wg *sync.WaitGroup) {
+		for id := range objectIdCh {
+			defer wg.Done()
+
+			file, err := m.Get(id)
+			if err != nil {
+				errCh <- err
+				cancel()
+				return
+			}
+			fileCh <- file
+
+		}
+	}
+
+	var wg sync.WaitGroup
+	objectIdCh := make(chan string, len(objectIds))
+	fileCh := make(chan dto.FileDTO, len(objectIds))
+	errCh := make(chan error, len(objectIds))
+
+	for range workersCnt {
+		go worker(objectIdCh, fileCh, errCh, &wg)
+	}
+
+	for _, id := range objectIds {
+		wg.Add(1)
+		objectIdCh <- id
+	}
+	close(objectIdCh)
+
+	go func() {
+		wg.Wait()
+		close(fileCh)
+		close(errCh)
+	}()
+
+	files := make([]dto.FileDTO, 0, len(objectIds))
+	errors := make([]error, 0)
+	for file := range fileCh {
+		files = append(files, file)
+	}
+	for err := range errCh {
+		errors = append(errors, err)
+	}
+
+	if len(errors) > 0 {
+		return nil, fmt.Errorf("failed getting files: err list: %v", errors)
+	}
+
+	return files, nil
 }
