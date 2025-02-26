@@ -34,7 +34,7 @@ func NewImageService(logger *slog.Logger, storage MinioClient, imageRepo ImageRe
 }
 
 // Put image to file storage storage and add file id to db
-func (i *ImageService) CreateItemImage(itemId int, file []byte) error {
+func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) {
 	objectID := uuid.New().String()
 
 	err := i.storage.Put(dto.FileDTO{
@@ -44,17 +44,17 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) error {
 	})
 	if err != nil {
 		i.logger.Error("failet store image", sl.Err(err))
-		return err
+		return "", err
 	}
 
 	err = i.imageRepo.Insert(itemId, objectID)
 	if err != nil {
 		// todo. что тогда делать с изображением в хранилище s3???
 		i.logger.Error("failet insert image to db", sl.Err(err))
-		return err
+		return "", err
 	}
 
-	return nil
+	return objectID, nil
 }
 
 // Get image from storage

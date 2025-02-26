@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/Masterminds/squirrel"
 )
@@ -27,8 +28,8 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("images").
-		Columns("item_id", "object_id").
-		Values(itemId, objectId)
+		Columns("item_id", "object_id", "uploaded_at").
+		Values(itemId, objectId, time.Now())
 
 	sql, args, err := psql.ToSql()
 	if err != nil {
@@ -47,4 +48,37 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	}
 
 	return nil
+}
+
+func (i *ImageRepository) Images(itemId int) ([]string, error) {
+	const op = "repository.image.Images"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	sql, args, err := psql.Select("object_id").From("images").Where("item_id = ?", itemId).ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return nil, err
+	}
+
+	rows, err := i.db.Query(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	var imageIds []string
+	for rows.Next() {
+		var imageId string
+		if err := rows.Scan(&imageId); err != nil {
+			i.logger.Error(op, sl.Err(err))
+
+			return nil, err
+		}
+		imageIds = append(imageIds, imageId)
+	}
+
+	return imageIds, nil
 }

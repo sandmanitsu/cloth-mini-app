@@ -21,16 +21,22 @@ type ItemRepository interface {
 	Create(item dto.ItemCreateDTO) error
 }
 
+type ImageRepository interface {
+	Images(itemId int) ([]string, error)
+}
+
 type ItemService struct {
-	logger   *slog.Logger
-	itemRepo ItemRepository
+	logger    *slog.Logger
+	itemRepo  ItemRepository
+	imageRepo ImageRepository
 }
 
 // Get item service object that represent the rest.ItemService interface
-func NewItemService(logger *slog.Logger, ir ItemRepository) *ItemService {
+func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository) *ItemService {
 	return &ItemService{
-		logger:   logger,
-		itemRepo: ir,
+		logger:    logger,
+		itemRepo:  ir,
+		imageRepo: imr,
 	}
 }
 
@@ -171,7 +177,19 @@ func (i *ItemService) validateUpdateData(item dto.ItemDTO) map[string]any {
 }
 
 func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
-	return i.itemRepo.ItemById(id)
+	item, err := i.itemRepo.ItemById(id)
+	if err != nil {
+		return item, err
+	}
+
+	imagesId, err := i.imageRepo.Images(int(item.ID))
+	if err != nil {
+		return item, err
+	}
+
+	item.ImageId = imagesId
+
+	return item, err
 }
 
 func (i *ItemService) Create(item dto.ItemCreateDTO) error {

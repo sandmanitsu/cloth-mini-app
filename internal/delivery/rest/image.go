@@ -13,13 +13,17 @@ import (
 
 type ImageService interface {
 	// Store image
-	CreateItemImage(itemId int, file []byte) error
+	CreateItemImage(itemId int, file []byte) (string, error)
 	// Get image from storage
 	Image(imageId string) (dto.FileDTO, error)
 }
 
 type ImageHandler struct {
 	Service ImageService
+}
+
+type CreateImageResponse struct {
+	FileId string `json:"file_id"`
 }
 
 func NewImageHandler(e *echo.Echo, srv ImageService) {
@@ -75,15 +79,15 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 		})
 	}
 
-	if err = i.Service.CreateItemImage(itemId, imageBytes); err != nil {
+	fileId, err := i.Service.CreateItemImage(itemId, imageBytes)
+	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image",
 		})
 	}
 
-	return c.JSON(http.StatusOK, SuccessResponse{
-		Status:    true,
-		Operation: "create",
+	return c.JSON(http.StatusOK, CreateImageResponse{
+		FileId: fileId,
 	})
 }
 

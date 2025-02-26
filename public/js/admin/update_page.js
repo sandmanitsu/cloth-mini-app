@@ -61,7 +61,19 @@ function renderItem(item, brands, category) {
                 <div class="four columns">
                     <div class="row">
                         <img src="../static/img/no_image.jpg" width="100%" height="auto" alt="mock image">
-                        <button class="u-full-width" id="update_btn">Обновить изображение</button>
+
+                        <div class="container">
+                            <div class="two columns">
+                                <button class="u-full-width" id="prev_image_btn">⬅️</button>
+                            </div>
+                            <div class="eight columns">
+                                <button class="u-full-width" id="update_image_btn">Обновить изображение</button>
+                            </div>
+                            <div class="two columns">
+                                <button class="u-full-width" id="next_image_btn">➡️</button>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -114,7 +126,40 @@ function renderItem(item, brands, category) {
                 </div>
             </div>`
 
-            container.insertAdjacentHTML('beforeend', html)
+    container.insertAdjacentHTML('beforeend', html)
+
+    // переключение форм с редактирование параметров и загрузкой изображения
+    document.getElementById('update_image_btn').addEventListener('click', function() {
+            document.getElementById('item').style.display = 'none'
+            document.getElementById('image_update').style.display = 'block'
+    })
+    // переключение форм с загрузки изображения на редактирование параметров
+    document.getElementById('back_btn').addEventListener('click', function() {
+        document.getElementById('item').style.display = 'block';
+        document.getElementById('image_update').style.display = 'none';
+    });
+
+    // загрузка изображения
+    console.log(document.querySelectorAll('item_id'));
+
+    document.getElementById('image-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        let formData = new FormData(event.target)
+
+        try {
+            const response = await fetch(`http://localhost:8080/image/create?itemId=${item.id}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ошибка: ${response.statusText}`);
+            }
+        } catch (error) {
+            console.error('Ошибка при загрузке изображения:', error);
+        }
+    })
 }
 
 /**

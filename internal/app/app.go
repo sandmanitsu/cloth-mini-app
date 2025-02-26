@@ -44,7 +44,7 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	imageRepo := imageRepo.NewImageRepository(logger, storage)
 
 	// prepare services
-	itemService := item.NewItemService(logger, itemRepo)
+	itemService := item.NewItemService(logger, itemRepo, imageRepo)
 	categoryService := category.NewCategoryService(logger, categoryRepo)
 	brandService := brand.NewBrandService(logger, brandRepo)
 	imageService := image.NewImageService(logger, minioClient, imageRepo)
