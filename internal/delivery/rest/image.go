@@ -82,7 +82,7 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 	fileId, err := i.Service.CreateItemImage(itemId, imageBytes)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "failet store image",
+			Err: "failet store image. Maybe reached max image per item",
 		})
 	}
 

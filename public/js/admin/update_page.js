@@ -1,7 +1,9 @@
-
 import { formatDate } from "./date.js";
 import { fetchBrands } from "./brand.js";
 import { fetchCategory } from "./category.js";
+
+const IMAGE_GALLERY_WIDHT = 323
+const IMAGE_GALLERY_HEIGHT = 430
 
 async function fetchItem() {
     let url = window.location.href
@@ -26,20 +28,6 @@ async function fetchItem() {
 }
 
 function renderItem(item, brands, category) {
-    let imageId = ''
-    if (item?.image_id && Array.isArray(item.image_id) && item.image_id.length > 0) {
-        imageId = item.image_id[0]
-    }
-
-    // получением изображения и идем формировать html страницы
-    // todo. это ужас но по-другому я не придумал. в дальнейшем нужно будет каким-то образом отдавать нескольок изображнием и это все сломается + понятно - ничего
-    getImage(imageId)
-        .then((base64Image) => {
-            itemHTML(base64Image, item, brands, category)
-        })
-}
-
-function itemHTML(base64Image, item, brands, category) {
     const container = document.getElementById("item")
 
     let brandOptions = `<option value="${item.brand_id}">${item.brand_name}</option>`
@@ -64,147 +52,69 @@ function itemHTML(base64Image, item, brands, category) {
             sex = 'уни';
             break;
     }
+    let genderOptions = `<option value="${item.sex}">${sex}</option>
+    <option value="1">Мужской</option>
+    <option value="2">Женский</option>
+    <option value="3">Унисекс</option>`
 
-        let imageSrc = '../static/img/no_image.jpg'
-        if (base64Image) {
-            imageSrc = base64Image
-        }
+    // заголовок с id
+    document.getElementById('item-id-text').innerHTML = `ID: ${item.id} | Создан: ${formatDate(item.created_at)} | Обновлен: ${formatDate(item.updated_at)}`
+    document.getElementById('item-id').value = item.id
 
-        let html = `
-        <div class="container">
-            <input type="hidden" id="item-id" value="${item.id}">
-            <h6 item_id="${item.id}">ID: ${item.id} | Создан: ${formatDate(item.created_at)} | Обновлен: ${formatDate(item.updated_at)}</h6>
-        </div>
+    // опции для брендов
+    document.getElementById('brand').innerHTML = brandOptions
 
-        <div class="container">
-            <div class="four columns">
-                <div class="row">
-                    <img src="${imageSrc}" width="100%" height="auto" alt="mock image">
+    // опции для категории
+    document.getElementById('category').innerHTML = categoryOptions
 
-                    <div class="container">
-                        <div class="two columns">
-                            <button class="u-full-width" id="prev_image_btn">⬅️</button>
-                        </div>
-                        <div class="eight columns">
-                            <button class="u-full-width" id="update_image_btn">Обновить изображение</button>
-                        </div>
-                        <div class="two columns">
-                            <button class="u-full-width" id="next_image_btn">➡️</button>
-                        </div>
-                    </div>
+    // опции для выбора пола
+    document.getElementById('gender').innerHTML = genderOptions
 
-                </div>
-            </div>
+    // value для поля Название
+    document.getElementById('item-name').value = item.name
 
-            <div class="eight columns">
-                <div class="five columns">
-                    <label for="brand">Бренд - ${item.brand_name}</label>
-                    <select class="u-full-width"  id="brand">
-                        ${brandOptions}
-                    </select>
-                </div>
+    // value для поля Цена
+    document.getElementById('price').value = item.price
 
-                <div class="seven columns">
-                    <label for="item-name">Название:</label>
-                    <input class="u-full-width"  type="text" id="item-name" placeholder="Название" value="${item.name}" />
-                </div>
-            </div>
+    // value для скидки
+    document.getElementById('discount').value = item.discount
 
-            <div class="eight columns">
-                <div class="five columns">
-                    <label for="category">Категория - ${item.category_name}</label>
-                    <select class="u-full-width"  id="category">
-                        ${categoryOptions}
-                    </select>
-                </div>
+    // description
+    document.getElementById('description').value = item.description
 
-                <div class="two columns">
-                    <label for="gender">Пол:</label>
-                    <select class="u-full-width"  id="gender">
-                        <option value="${item.sex}">${sex}</option>
-                        <option value="1">Мужской</option>
-                        <option value="2">Женский</option>
-                        <option value="3">Унисекс</option>
-                    </select>
-                </div>
-
-                <div class="three columns">
-                    <label for="price">Цена:</label>
-                    <input class="u-full-width"  type="number" id="price" placeholder="Цена" value="${item.price}"/>
-                </div>
-
-                <div class="two columns">
-                    <label for="discount">Скидка:</label>
-                    <input class="u-full-width"  type="number" id="discount" placeholder="Скидка" value="${item.discount}" />
-                </div>
-            </div>
-
-            <div class="eight columns">
-                <label for="description">Описание:</label>
-                <textarea id="description" cols="50" rows="5" placeholder="">${item.description}</textarea>
-            </div>
-        </div>`
-
-    container.insertAdjacentHTML('beforeend', html)
-
-    // переключение форм с редактирование параметров и загрузкой изображения
-    document.getElementById('update_image_btn').addEventListener('click', function() {
-        document.getElementById('item').style.display = 'none'
-        document.getElementById('image_update').style.display = 'block'
-    })
-    // переключение форм с загрузки изображения на редактирование параметров
-    document.getElementById('back_btn').addEventListener('click', function() {
-    document.getElementById('item').style.display = 'block';
-    document.getElementById('image_update').style.display = 'none';
-    });
-
-    // загрузка изображения
-    console.log(document.querySelectorAll('item_id'));
-
-    document.getElementById('image-form').addEventListener('submit', async (event) => {
-    event.preventDefault();
-
-    let formData = new FormData(event.target)
-
-    try {
-        const response = await fetch(`http://localhost:8080/image/create?itemId=${item.id}`, {
-            method: 'POST',
-            body: formData
-        });
-
-        if (!response.ok) {
-            throw new Error(`Ошибка: ${response.statusText}`);
-        }
-    } catch (error) {
-        console.error('Ошибка при загрузке изображения:', error);
-    }
-    })
-}
-
-async function getImage(imageId) {
-    if (!imageId) {
-        return ''
+    // подставляет изображения вместо мокового, если такое есть
+    let imageId = ''
+    if (item?.image_id && Array.isArray(item.image_id) && item.image_id.length > 0) {
+        imageId = item.image_id[0]
     }
 
-    try {
-        let response = await fetch(`http://localhost:8080/image/get/${imageId}`)
+    getImage(imageId)
+        .then((base64Image) => {
+            if (base64Image == '') {
+                return
+            }
 
-        if (!response.ok) {
-            throw new Error(`Ошибка: ${response.status}`);
-        }
+            document.getElementById('image-main').src = base64Image
+    })
 
-        const blob = await response.blob();
+    // вставляем все изображения в галлерею
+    if (item.image_id.length > 0) {
+        item.image_id.forEach(image => {
+            getImage(image)
+                .then((base64Image) => {
+                    if (base64Image == '') {
+                        return
+                    }
 
-        const base64Data = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(blob);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (error) => reject(error);
-        });
+                    const img = document.createElement('img')
+                    img.width = IMAGE_GALLERY_WIDHT
+                    img.height = IMAGE_GALLERY_HEIGHT
+                    img.alt = 'image'
+                    img.src = base64Image
 
-        return base64Data;
-    } catch (error) {
-        console.error('Ошибка получения изображения:', error);
+                    document.getElementById('image-gallery').appendChild(img);
+                })
+        })
     }
 }
 
@@ -256,9 +166,85 @@ async function update() {
     }
 }
 
+async function getImage(imageId) {
+    if (!imageId) {
+        return ''
+    }
+
+    try {
+        let response = await fetch(`http://localhost:8080/image/get/${imageId}`)
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+
+        const base64Data = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+
+        return base64Data;
+    } catch (error) {
+        console.error('Ошибка получения изображения:', error);
+    }
+}
+
+async function uploadImage(event) {
+    event.preventDefault();
+
+    let formData = new FormData(event.target)
+    let id = document.getElementById('item-id').value
+
+    try {
+        const response = await fetch(`http://localhost:8080/image/create?itemId=${id}`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Ошибка: ${response.statusText}`);
+        }
+
+        const fileid = await response.json();
+
+        getImage(fileid.file_id)
+            .then((base64Image) => {
+                const img = document.createElement('img')
+                img.width = IMAGE_GALLERY_WIDHT
+                img.height = IMAGE_GALLERY_HEIGHT
+                img.alt = 'image'
+                img.src = base64Image
+
+                document.getElementById('image-gallery').appendChild(img);
+            })
+    } catch (error) {
+        console.error('Ошибка при загрузке изображения:', error);
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     fetchItem()
 
     const updateBtn = document.getElementById("update_btn")
     updateBtn.addEventListener('click', update)
+
+    // переключение форм с редактирование параметров и загрузкой изображения
+    document.getElementById('update_image_btn').addEventListener('click', function() {
+        document.getElementById('item').style.display = 'none'
+        document.getElementById('image_update').style.display = 'block'
+    })
+    // переключение форм с загрузки изображения на редактирование параметров
+    document.getElementById('back_btn').addEventListener('click', function() {
+        document.getElementById('item').style.display = 'block';
+        document.getElementById('image_update').style.display = 'none';
+    });
+
+    // загрузка изображения
+    document.getElementById('image-form').addEventListener('submit', (event) => {
+        uploadImage(event)
+    })
 });

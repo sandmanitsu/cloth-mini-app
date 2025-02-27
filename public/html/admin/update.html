@@ -17,10 +17,76 @@
         </div>
 
         <div id="item">
-            <!-- форма обновления товара вставляется сюда -->
+            <div class="container">
+                <div class="container">
+                    <input type="hidden" id="item-id" value="">
+                    <h6 id="item-id-text"></h6>
+                </div>
+
+                <div class="container">
+                    <div class="four columns">
+                        <div class="row">
+                            <img id="image-main" src="../static/img/no_image.jpg" width="100%" height="auto" alt="mock image">
+
+                            <div class="container">
+                                <button class="u-full-width" id="update_image_btn">Редактировать изображения</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="eight columns">
+                        <div class="five columns">
+                            <label for="brand">Бренд</label>
+                            <select class="u-full-width"  id="brand">
+                                <!-- ${brandOptions} -->
+                            </select>
+                        </div>
+
+                        <div class="seven columns">
+                            <label for="item-name">Название:</label>
+                            <input class="u-full-width"  type="text" id="item-name" placeholder="Название" value="" />
+                        </div>
+                    </div>
+
+                    <div class="eight columns">
+                        <div class="five columns">
+                            <label for="category">Категория</label>
+                            <select class="u-full-width"  id="category">
+                                <!-- ${categoryOptions} -->
+                            </select>
+                        </div>
+
+                        <div class="two columns">
+                            <label for="gender">Пол:</label>
+                            <select class="u-full-width"  id="gender">
+                                <!-- ${gender options} -->
+                            </select>
+                        </div>
+
+                        <div class="three columns">
+                            <label for="price">Цена:</label>
+                            <input class="u-full-width"  type="number" id="price" placeholder="Цена" value=""/>
+                        </div>
+
+                        <div class="two columns">
+                            <label for="discount">Скидка:</label>
+                            <input class="u-full-width"  type="number" id="discount" placeholder="Скидка" value="0" />
+                        </div>
+                    </div>
+
+                    <div class="eight columns">
+                        <label for="description">Описание:</label>
+                        <textarea id="description" cols="50" rows="5" placeholder="Описание товара..."></textarea>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div style="display: none;" id="image_update">
+            <div id="image-gallery" class="container">
+
+            </div>
+
             <form id="image-form">
                 <label for="image">Загрузите изображение:</label>
                 <input type="file" id="image" name="image" accept="image/png, image/jpeg"><br><br>

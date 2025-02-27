@@ -11,6 +11,10 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
+const (
+	maxImagesPerItem = 4
+)
+
 type ImageRepository struct {
 	db     *sql.DB
 	logger *slog.Logger
@@ -25,6 +29,18 @@ func NewImageRepository(logger *slog.Logger, db *postgresql.Storage) *ImageRepos
 
 func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	const op = "repository.image.Insert"
+
+	images, err := i.Images(itemId)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet count existing images"), sl.Err(err))
+		return err
+	}
+
+	if len(images) >= maxImagesPerItem {
+		i.logger.Debug("the number of images per item has reached the maximum", slog.Attr{Key: "itemId", Value: slog.IntValue(itemId)})
+
+		return fmt.Errorf("reached max images per item") // todo. вынести в переменные, что проверить на уровне delivery. В какой слой поместить ???
+	}
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("images").
