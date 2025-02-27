@@ -107,15 +107,60 @@ function renderItem(item, brands, category) {
                     }
 
                     const img = document.createElement('img')
+                    img.setAttribute('id', image);
                     img.width = IMAGE_GALLERY_WIDHT
                     img.height = IMAGE_GALLERY_HEIGHT
                     img.alt = 'image'
                     img.src = base64Image
 
                     document.getElementById('image-gallery').appendChild(img);
+
+                    createDeleteBtn(image)
                 })
         })
     }
+}
+
+function createDeleteBtn(image) {
+    const container = document.getElementById('delete-btns')
+
+    // создаем кнопку
+    const button = document.createElement('button');
+    button.classList.add('u-full-width');
+    button.setAttribute('id', 'delete_btn');
+    button.setAttribute('image_id', image);
+    button.textContent = 'Удалить';
+
+    // Привязываем слушатель событий к кнопке
+    button.addEventListener('click', async (event) => {
+        const imageId = event.target.getAttribute('image_id');
+
+        try {
+            const response = await fetch(`http://localhost:8080/image/delete?image_id=${imageId}`, {
+                method: 'DELETE'
+            });
+
+            if (!response.ok) {
+                throw new Error(`Ошибка при удалении изображения: ${response.status}`);
+            }
+
+            const imageElement = document.getElementById(imageId);
+            if (imageElement) {
+                imageElement.remove();
+            }
+
+            event.target.remove();
+        } catch (error) {
+            console.error('Ошибка при удалении изображения:', error);
+        }
+    });
+
+    // Вставка кнопки в контейнер
+    const div = document.createElement('div');
+    div.classList.add('three', 'columns');
+    div.appendChild(button);
+
+    container.appendChild(div);
 }
 
 /**
@@ -214,12 +259,15 @@ async function uploadImage(event) {
         getImage(fileid.file_id)
             .then((base64Image) => {
                 const img = document.createElement('img')
+                img.setAttribute('id', fileid.file_id);
                 img.width = IMAGE_GALLERY_WIDHT
                 img.height = IMAGE_GALLERY_HEIGHT
                 img.alt = 'image'
                 img.src = base64Image
 
                 document.getElementById('image-gallery').appendChild(img);
+
+                createDeleteBtn(fileid.file_id)
             })
     } catch (error) {
         console.error('Ошибка при загрузке изображения:', error);

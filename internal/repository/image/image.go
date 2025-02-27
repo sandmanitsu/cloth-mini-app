@@ -98,3 +98,27 @@ func (i *ImageRepository) Images(itemId int) ([]string, error) {
 
 	return imageIds, nil
 }
+
+func (i *ImageRepository) Delete(imageId string) error {
+	const op = "repository.image.Delete"
+
+	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Delete("").
+		From("images").
+		Where("object_id = ?", imageId).
+		ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
+
+	_, err = i.db.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	return nil
+}

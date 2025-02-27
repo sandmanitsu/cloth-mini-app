@@ -17,6 +17,7 @@ type MinioClient interface {
 
 type ImageRepository interface {
 	Insert(itemId int, objectID string) error
+	Delete(imageId string) error
 }
 
 type ImageService struct {
@@ -79,4 +80,8 @@ func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
 	}
 
 	return files, nil
+}
+
+func (i *ImageService) Delete(imageId string) error {
+	return i.imageRepo.Delete(imageId)
 }

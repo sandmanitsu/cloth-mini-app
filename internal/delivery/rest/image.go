@@ -16,14 +16,12 @@ type ImageService interface {
 	CreateItemImage(itemId int, file []byte) (string, error)
 	// Get image from storage
 	Image(imageId string) (dto.FileDTO, error)
+	// Delete image from db and storage
+	Delete(imageId string) error
 }
 
 type ImageHandler struct {
 	Service ImageService
-}
-
-type CreateImageResponse struct {
-	FileId string `json:"file_id"`
 }
 
 func NewImageHandler(e *echo.Echo, srv ImageService) {
@@ -36,8 +34,15 @@ func NewImageHandler(e *echo.Echo, srv ImageService) {
 
 	g.POST("/create", handler.CreateItemImage)
 	g.GET("/get/:image_id", handler.Image)
+	g.DELETE("/delete", handler.Delete)
 }
 
+type CreateImageResponse struct {
+	FileId string `json:"file_id"`
+}
+
+// Put image to storage and adding fileID to db
+// Return CreateImageResponse
 func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 	request := c.Request()
 	err := request.ParseForm()
@@ -95,6 +100,7 @@ type ImageId struct {
 	Id string `param:"image_id"`
 }
 
+// Return image by image_id in query param
 func (i *ImageHandler) Image(c echo.Context) error {
 	var imageId ImageId
 	err := c.Bind(&imageId)
@@ -116,4 +122,28 @@ func (i *ImageHandler) Image(c echo.Context) error {
 	response.Write(file.Buffer)
 
 	return nil
+}
+
+// Deleting image by image_id provided in query param
+func (i *ImageHandler) Delete(c echo.Context) error {
+	request := c.Request()
+	err := request.ParseForm()
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "parse query params"})
+	}
+
+	imageId := request.Form.Get("image_id")
+	if imageId == "" {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "image_id not provided"})
+	}
+
+	err = i.Service.Delete(imageId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "failed deleting image"})
+	}
+
+	return c.JSON(http.StatusOK, SuccessResponse{
+		Status:    true,
+		Operation: "delete",
+	})
 }
