@@ -2,7 +2,7 @@ package main
 
 import (
 	"cloth-mini-app/internal/app"
-	congig "cloth-mini-app/internal/config"
+	"cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/logger"
 	"log"
 	"log/slog"
@@ -10,7 +10,7 @@ import (
 
 func main() {
 	log.Println("config initializing...")
-	config := congig.MustLoad()
+	config := config.MustLoad()
 
 	log.Println("logger initializing...")
 	logger := logger.NewLogger(config.Env)
