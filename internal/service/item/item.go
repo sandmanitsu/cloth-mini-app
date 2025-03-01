@@ -19,9 +19,12 @@ type ItemRepository interface {
 	ItemById(id int) (domain.ItemAPI, error)
 	// Create item
 	Create(item dto.ItemCreateDTO) error
+	// Delete item
+	Delete(id int) error
 }
 
 type ImageRepository interface {
+	// Get images fileIds
 	Images(itemId int) ([]string, error)
 }
 
@@ -194,4 +197,15 @@ func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
 
 func (i *ItemService) Create(item dto.ItemCreateDTO) error {
 	return i.itemRepo.Create(item)
+}
+
+func (i *ItemService) Delete(id int) error {
+	err := i.itemRepo.Delete(id)
+	if err != nil {
+		i.logger.Error("failed deleting item", sl.Err(err))
+
+		return err
+	}
+
+	return nil
 }

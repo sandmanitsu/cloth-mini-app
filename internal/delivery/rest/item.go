@@ -23,6 +23,8 @@ type ItemService interface {
 	Update(iten dto.ItemDTO) error
 	// Create item
 	Create(item dto.ItemCreateDTO) error
+	// Delete item
+	Delete(id int) error
 }
 
 type ItemHandler struct {
@@ -41,6 +43,7 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	g.GET("/get/:id", handler.ItemById)
 	g.POST("/update/:id", handler.Update)
 	g.POST("/create", handler.Create)
+	g.DELETE("/delete/:id", handler.Delete)
 }
 
 type ItemResponse struct {
@@ -131,5 +134,25 @@ func (i *ItemHandler) Create(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, ItemCreateResponse{
 		Success: true,
+	})
+}
+
+func (i *ItemHandler) Delete(c echo.Context) error {
+	var itemId ItemId
+	err := c.Bind(&itemId)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
+	}
+
+	err = i.Service.Delete(itemId.Id)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Err: "failed deleting item",
+		})
+	}
+
+	return c.JSON(http.StatusOK, SuccessResponse{
+		Status:    true,
+		Operation: "delete",
 	})
 }

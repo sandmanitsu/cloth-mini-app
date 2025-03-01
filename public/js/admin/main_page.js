@@ -85,6 +85,7 @@ function renderItems(items) {
             <td>${formatDate(product.created_at)}</td>
             <td>${formatDate(product.updated_at)}</td>
             <td><a class="button button-primary" href="update/${product.id}">Редактировать</a></td>
+            <td><a id="delete-btn" class="button"">Удалить</a></td>
         </tr>`;
 
     container.insertAdjacentHTML('beforeend', itemCard);

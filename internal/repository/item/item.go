@@ -74,7 +74,7 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	q = q.Where(filter)
 
 	sql, args, _ := q.ToSql()
-	fmt.Println(sql, args, filter)
+	// fmt.Println(sql, args, filter)
 
 	rows, err := i.db.Query(sql, args...)
 	if err != nil {
@@ -194,6 +194,30 @@ func (i *ItemRepository) Create(item dto.ItemCreateDTO) error {
 	}
 
 	fmt.Println(sql, args)
+
+	_, err = i.db.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	return nil
+}
+
+func (i *ItemRepository) Delete(id int) error {
+	const op = "repository.item.Delete"
+
+	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Delete("").
+		From("items").
+		Where("id = ?", id).
+		ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
 
 	_, err = i.db.Exec(sql, args...)
 	if err != nil {
