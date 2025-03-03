@@ -1,14 +1,13 @@
 package repository
 
 import (
-	"cloth-mini-app/internal/domain"
-	"cloth-mini-app/internal/dto"
+	domain "cloth-mini-app/internal/domain/item"
 	sl "cloth-mini-app/internal/logger"
-	"cloth-mini-app/internal/service/item"
 	"cloth-mini-app/internal/storage/postgresql"
 	"database/sql"
 	"fmt"
 	"log/slog"
+	"math"
 	"time"
 
 	"github.com/Masterminds/squirrel"
@@ -32,8 +31,18 @@ func NewItemRepository(logger *slog.Logger, db *postgresql.Storage) *ItemReposit
 }
 
 // Get items records
-func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]domain.ItemAPI, error) {
+func (i *ItemRepository) Items(params domain.ItemInputData) ([]domain.ItemAPI, error) {
 	const op = "repository.item.Items"
+
+	var limit, offset uint64
+	if params.Offset != nil {
+		offset = uint64(*params.Offset)
+	}
+	if params.Limit != nil {
+		limit = uint64(*params.Limit)
+	}
+
+	filter := i.filterItems(params)
 
 	if limit == 0 {
 		limit = limitMax
@@ -45,18 +54,17 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 		From("items i").
 		LeftJoin("brand b on i.brand_id = b.id").
 		LeftJoin("category c on i.category_id = c.id").
-		// Where(filter).
 		Limit(limit).
 		Offset(offset)
 
 	minPrice, minPriceOk := filter["min_price"]
 	maxPrice, maxPriceOk := filter["max_price"]
 	if minPriceOk || maxPriceOk {
-		if minPrice.(string) == "" {
-			minPrice = "0"
+		if minPrice.(uint) == 0 {
+			minPrice = 0
 		}
-		if maxPrice.(string) == "" {
-			maxPrice = "99999999"
+		if maxPrice.(uint) == 0 {
+			maxPrice = uint(math.MaxUint)
 		}
 
 		q = q.Where(squirrel.Expr("i.price BETWEEN ? AND ?", minPrice, maxPrice))
@@ -111,13 +119,52 @@ func (i *ItemRepository) Items(filter map[string]any, limit, offset uint64) ([]d
 	return items, nil
 }
 
+// Prepare data for where statement
+func (i *ItemRepository) filterItems(params domain.ItemInputData) map[string]any {
+	filter := make(map[string]any)
+
+	if params.ID != nil {
+		filter["i.id"] = *params.ID
+	}
+	if params.BrandId != nil {
+		filter["i.brand_id"] = *params.BrandId
+	}
+	if params.Name != nil {
+		filter["i.name"] = *params.Name
+	}
+	if params.Sex != nil {
+		filter["i.sex"] = *params.Sex
+	}
+	if params.CategoryId != nil {
+		filter["c.id"] = *params.CategoryId
+	}
+
+	if params.MinPrice != nil {
+		filter["min_price"] = *params.MinPrice
+	}
+	if params.MaxPrice != nil {
+		filter["max_price"] = *params.MaxPrice
+	}
+
+	if params.Discount != nil {
+		filter["i.discount"] = params.Discount
+	}
+
+	return filter
+}
+
 // Update item record by ID
-func (i *ItemRepository) Update(data item.ItemUpdateData) error {
+func (i *ItemRepository) Update(data domain.ItemUpdate) error {
 	const op = "repository.item.Update"
+
+	setState := i.updateSetStatements(data)
+	if len(setState) == 0 {
+		i.logger.Error(fmt.Sprintf("%s: no field to update", op))
+	}
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).Update("items")
 
-	for col, value := range data.Data {
+	for col, value := range setState {
 		psql = psql.Set(col, value)
 	}
 
@@ -134,6 +181,39 @@ func (i *ItemRepository) Update(data item.ItemUpdateData) error {
 	}
 
 	return nil
+}
+
+// Prepare update set statements
+// field => value
+func (i *ItemRepository) updateSetStatements(item domain.ItemUpdate) map[string]any {
+	data := make(map[string]any)
+
+	if item.BrandId != nil {
+		data["brand_id"] = *item.BrandId
+	}
+	if item.Name != nil {
+		data["name"] = *item.Name
+	}
+	if item.Description != nil {
+		data["description"] = *item.Description
+	}
+	if item.CategoryId != nil {
+		data["category_id"] = *item.CategoryId
+	}
+	if item.Sex != nil {
+		data["sex"] = *item.Sex
+	}
+	if item.Discount != nil {
+		data["discount"] = *item.Discount
+	}
+	if item.Price != nil {
+		data["price"] = *item.Price
+	}
+	if item.OuterLink != nil {
+		data["outer_link"] = *item.OuterLink
+	}
+
+	return data
 }
 
 func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
@@ -178,7 +258,7 @@ func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
 	return item, nil
 }
 
-func (i *ItemRepository) Create(item dto.ItemCreateDTO) error {
+func (i *ItemRepository) Create(item domain.ItemCreate) error {
 	const op = "repository.item.Create"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).

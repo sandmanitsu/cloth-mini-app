@@ -51,7 +51,6 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) 
 	err = i.imageRepo.Insert(itemId, objectID)
 	if err != nil {
 		// todo. что тогда делать с изображением в хранилище s3???
-		i.logger.Error("failet insert image to db", sl.Err(err))
 		return "", err
 	}
 
