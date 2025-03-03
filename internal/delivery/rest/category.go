@@ -1,7 +1,7 @@
 package rest
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/category"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -27,6 +27,12 @@ func NewCategoryHandler(e *echo.Echo, srv CategoryService) {
 	g.GET("/get", handler.Categories)
 }
 
+type Category struct {
+	CategoryId int    `json:"category_id"`
+	Type       int    `json:"type"`
+	Name       string `json:"category_name"`
+}
+
 func (c *CategoryHandler) Categories(ctx echo.Context) error {
 	categories, err := c.Service.Categories()
 	if err != nil {
@@ -35,5 +41,14 @@ func (c *CategoryHandler) Categories(ctx echo.Context) error {
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, categories)
+	categoriesResponse := make([]Category, 0, len(categories))
+	for _, cat := range categories {
+		categoriesResponse = append(categoriesResponse, Category{
+			CategoryId: cat.CategoryId,
+			Type:       cat.Type,
+			Name:       cat.Name,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, categoriesResponse)
 }

@@ -1,7 +1,7 @@
 package category
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/category"
 	"log/slog"
 )
 

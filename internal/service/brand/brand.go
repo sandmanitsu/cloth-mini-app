@@ -1,7 +1,7 @@
 package brand
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/brand"
 	"log/slog"
 )
 

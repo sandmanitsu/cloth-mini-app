@@ -11,6 +11,10 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
+var (
+	errMaxImages = fmt.Errorf("reached max images per item")
+)
+
 const (
 	maxImagesPerItem = 4
 )
@@ -39,7 +43,7 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	if len(images) >= maxImagesPerItem {
 		i.logger.Debug("the number of images per item has reached the maximum", slog.Attr{Key: "itemId", Value: slog.IntValue(itemId)})
 
-		return fmt.Errorf("reached max images per item") // todo. вынести в переменные, что проверить на уровне delivery. В какой слой поместить ???
+		return errMaxImages
 	}
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
@@ -53,8 +57,6 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 
 		return err
 	}
-
-	fmt.Println(sql, args)
 
 	_, err = i.db.Exec(sql, args...)
 	if err != nil {
