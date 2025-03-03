@@ -122,3 +122,30 @@ func (i *ImageRepository) Delete(imageId string) error {
 
 	return nil
 }
+
+func (i *ImageRepository) InsertTempImage(objectId string) error {
+	const op = "repository.image.InsertTempImage"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Insert("temp_images").
+		Columns("object_id", "uploaded_at").
+		Values(objectId, time.Now())
+
+	sql, args, err := psql.ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
+
+	fmt.Println(sql, args)
+
+	_, err = i.db.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	return nil
+}

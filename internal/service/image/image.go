@@ -18,6 +18,7 @@ type MinioClient interface {
 type ImageRepository interface {
 	Insert(itemId int, objectID string) error
 	Delete(imageId string) error
+	InsertTempImage(imageId string) error
 }
 
 type ImageService struct {
@@ -84,4 +85,26 @@ func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
 
 func (i *ImageService) Delete(imageId string) error {
 	return i.imageRepo.Delete(imageId)
+}
+
+// Store temp image to storages
+func (i *ImageService) CreateTempImage(file []byte) (string, error) {
+	objectID := uuid.New().String()
+
+	err := i.storage.Put(dto.FileDTO{
+		ID:          objectID,
+		ContentType: minio.ImageContentType,
+		Buffer:      file,
+	})
+	if err != nil {
+		i.logger.Error("failet store image", sl.Err(err))
+		return "", err
+	}
+
+	err = i.imageRepo.InsertTempImage(objectID)
+	if err != nil {
+		return "", err
+	}
+
+	return objectID, nil
 }
