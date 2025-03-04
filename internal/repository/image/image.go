@@ -3,6 +3,7 @@ package image
 import (
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/postgresql"
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -31,27 +32,54 @@ func NewImageRepository(logger *slog.Logger, db *postgresql.Storage) *ImageRepos
 	}
 }
 
+// insert image data to db with SELECT FOR UPDATE
 func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	const op = "repository.image.Insert"
 
-	images, err := i.Images(itemId)
+	ctx := context.Background()
+	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet count existing images"), sl.Err(err))
+		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
+	}
+	defer tx.Rollback()
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	sql, args, err := psql.Select("*").From("images").Where("item_id = ?", itemId).Suffix("for update").ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
 		return err
 	}
 
-	if len(images) >= maxImagesPerItem {
+	_, err = i.db.Query(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	sql, args, err = psql.Select("count(*)").From("images").Where("item_id = ?", itemId).ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
+
+	var imagePerItem int
+	err = i.db.QueryRow(sql, args...).Scan(&imagePerItem)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	if imagePerItem >= maxImagesPerItem {
 		i.logger.Debug("the number of images per item has reached the maximum", slog.Attr{Key: "itemId", Value: slog.IntValue(itemId)})
 
 		return errMaxImages
 	}
 
-	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
-		Insert("images").
-		Columns("item_id", "object_id", "uploaded_at").
-		Values(itemId, objectId, time.Now())
-
-	sql, args, err := psql.ToSql()
+	sql, args, err = psql.Insert("images").Columns("item_id", "object_id", "uploaded_at").Values(itemId, objectId, time.Now()).ToSql()
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
 
@@ -65,10 +93,14 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 		return err
 	}
 
+	if err = tx.Commit(); err != nil {
+		i.logger.Error(fmt.Sprintf("%s : failed commit transaction", op), sl.Err(err))
+	}
+
 	return nil
 }
 
-func (i *ImageRepository) Images(itemId int) ([]string, error) {
+func (i *ImageRepository) GetImages(itemId int) ([]string, error) {
 	const op = "repository.image.Images"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

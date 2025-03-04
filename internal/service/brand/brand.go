@@ -6,7 +6,7 @@ import (
 )
 
 type BrandRepository interface {
-	Brands() ([]domain.Brand, error)
+	GetBrands() ([]domain.Brand, error)
 }
 
 type BrandService struct {
@@ -22,5 +22,5 @@ func NewBrandService(logger *slog.Logger, BrandRepo BrandRepository) *BrandServi
 }
 
 func (b *BrandService) Brands() ([]domain.Brand, error) {
-	return b.BrandRepo.Brands()
+	return b.BrandRepo.GetBrands()
 }

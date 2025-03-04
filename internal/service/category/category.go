@@ -6,7 +6,7 @@ import (
 )
 
 type CategoryRepository interface {
-	Categories() ([]domain.Category, error)
+	GetCategories() ([]domain.Category, error)
 }
 
 type CategoryService struct {
@@ -22,5 +22,5 @@ func NewCategoryService(logger *slog.Logger, categoryRepo CategoryRepository) *C
 }
 
 func (c *CategoryService) Categories() ([]domain.Category, error) {
-	return c.categoryRepo.Categories()
+	return c.categoryRepo.GetCategories()
 }

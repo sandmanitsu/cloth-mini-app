@@ -23,7 +23,7 @@ func NewBrandRepository(logger *slog.Logger, db *postgresql.Storage) *BrandRepos
 	}
 }
 
-func (b *BrandRepository) Brands() ([]domain.Brand, error) {
+func (b *BrandRepository) GetBrands() ([]domain.Brand, error) {
 	const op = "repository.Brand.Brands"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

@@ -23,7 +23,7 @@ func NewCategoryRepository(logger *slog.Logger, db *postgresql.Storage) *Categor
 	}
 }
 
-func (c *CategoryRepository) Categories() ([]domain.Category, error) {
+func (c *CategoryRepository) GetCategories() ([]domain.Category, error) {
 	const op = "repository.Category.Category"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

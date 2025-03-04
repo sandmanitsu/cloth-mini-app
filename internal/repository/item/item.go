@@ -31,7 +31,7 @@ func NewItemRepository(logger *slog.Logger, db *postgresql.Storage) *ItemReposit
 }
 
 // Get items records
-func (i *ItemRepository) Items(params domain.ItemInputData) ([]domain.ItemAPI, error) {
+func (i *ItemRepository) GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error) {
 	const op = "repository.item.Items"
 
 	var limit, offset uint64
@@ -216,7 +216,7 @@ func (i *ItemRepository) updateSetStatements(item domain.ItemUpdate) map[string]
 	return data
 }
 
-func (i *ItemRepository) ItemById(id int) (domain.ItemAPI, error) {
+func (i *ItemRepository) GetItemById(id int) (domain.ItemAPI, error) {
 	const op = "repository.item.ItemById"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

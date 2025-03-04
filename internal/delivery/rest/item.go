@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
@@ -45,44 +44,9 @@ func NewItemHandler(e *echo.Echo, srv ItemService) {
 	g.DELETE("/delete/:id", handler.Delete)
 }
 
-type ItemInputParams struct {
-	ID         *uint   `query:"id"`
-	BrandId    *uint   `query:"brand_id"`
-	Name       *string `query:"name"`
-	Sex        *int    `query:"sex"`
-	CategoryId *uint   `query:"category_id"`
-	MinPrice   *uint   `query:"min_price"`
-	MaxPrice   *uint   `query:"max_price"`
-	Discount   *uint   `query:"discount"`
-	Offset     *uint   `query:"offset"`
-	Limit      *uint   `query:"limit"`
-}
-
-type Item struct {
-	ID           uint       `json:"id"`
-	BrandId      uint       `json:"brand_id"`
-	BrandName    string     `json:"brand_name"`
-	Name         string     `json:"name"`
-	Description  string     `json:"description"`
-	Sex          int        `json:"sex"`
-	CategoryId   int        `json:"category_id"`
-	CategoryType int        `json:"category_type"`
-	CategoryName string     `json:"category_name"`
-	Price        int        `json:"price"`
-	Discount     *int       `json:"discount"`
-	OuterLink    string     `json:"outer_link"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
-}
-
-type ItemResponse struct {
-	Count int    `json:"count"`
-	Items []Item `json:"items"`
-}
-
 // GET /item/get Fetch items by query params
 func (i *ItemHandler) Items(c echo.Context) error {
-	var itemInput ItemInputParams
+	var itemInput ItemQueryParams
 	err := c.Bind(&itemInput)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
@@ -104,16 +68,16 @@ func (i *ItemHandler) Items(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "getting items"})
 	}
 
-	return c.JSON(http.StatusOK, ItemResponse{
+	return c.JSON(http.StatusOK, ItemsResponse{
 		Count: len(items),
-		Items: i.convertDomainToDeliveryItem(items),
+		Items: i.convertItemAPIFromDomain(items),
 	})
 }
 
-func (i *ItemHandler) convertDomainToDeliveryItem(domainItems []domain.ItemAPI) []Item {
-	items := make([]Item, 0, len(domainItems))
+func (i *ItemHandler) convertItemAPIFromDomain(domainItems []domain.ItemAPI) []ItemResponse {
+	items := make([]ItemResponse, 0, len(domainItems))
 	for _, item := range domainItems {
-		items = append(items, Item{
+		items = append(items, ItemResponse{
 			ID:           item.ID,
 			BrandId:      item.BrandId,
 			BrandName:    item.BrandName,
@@ -132,18 +96,6 @@ func (i *ItemHandler) convertDomainToDeliveryItem(domainItems []domain.ItemAPI) 
 	}
 
 	return items
-}
-
-type ItemUpdate struct {
-	ID          int     `param:"id"`
-	BrandId     *int    `json:"brand_id"`
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Sex         *int    `json:"sex"`
-	CategoryId  *int    `json:"category_id"`
-	Price       *uint   `json:"price"`
-	Discount    *uint   `json:"discount"`
-	OuterLink   *string `json:"outerlink"`
 }
 
 // POST /item/update/:id Update item with provided id (required) and updating params
@@ -170,24 +122,6 @@ func (i *ItemHandler) Update(c echo.Context) error {
 		Status:    true,
 		Operation: "update",
 	})
-}
-
-type ItemByIdResponse struct {
-	ID           uint       `json:"id"`
-	BrandId      uint       `json:"brand_id"`
-	BrandName    string     `json:"brand_name"`
-	Name         string     `json:"name"`
-	Description  string     `json:"description"`
-	Sex          int        `json:"sex"`
-	CategoryId   int        `json:"category_id"`
-	CategoryType int        `json:"category_type"`
-	CategoryName string     `json:"category_name"`
-	Price        int        `json:"price"`
-	Discount     *int       `json:"discount"`
-	OuterLink    string     `json:"outer_link"`
-	CreatedAt    time.Time  `json:"created_at"`
-	UpdatedAt    *time.Time `json:"updated_at"`
-	ImageId      []string   `json:"image_id"`
 }
 
 type ItemId struct {
@@ -226,17 +160,6 @@ func (i *ItemHandler) ItemById(c echo.Context) error {
 		UpdatedAt:    item.UpdatedAt,
 		ImageId:      item.ImageId,
 	})
-}
-
-type ItemCreate struct {
-	BrandId     int    `json:"brand_id" validate:"required"`
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Sex         int    `json:"sex" validate:"required"`
-	CategoryId  int    `json:"category_id" validate:"required"`
-	Price       uint   `json:"price" validate:"required"`
-	Discount    uint   `json:"discount"`
-	OuterLink   string `json:"outer_link" validate:"required"`
 }
 
 func (i *ItemHandler) Create(c echo.Context) error {

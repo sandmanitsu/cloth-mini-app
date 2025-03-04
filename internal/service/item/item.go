@@ -9,11 +9,11 @@ import (
 
 type ItemRepository interface {
 	// Fetch items from db
-	Items(params domain.ItemInputData) ([]domain.ItemAPI, error)
+	GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error)
+	// Returning item by id
+	GetItemById(id int) (domain.ItemAPI, error)
 	// Update item record
 	Update(data domain.ItemUpdate) error
-	// Returning item by id
-	ItemById(id int) (domain.ItemAPI, error)
 	// Create item
 	Create(item domain.ItemCreate) error
 	// Delete item
@@ -22,7 +22,7 @@ type ItemRepository interface {
 
 type ImageRepository interface {
 	// Get images fileIds
-	Images(itemId int) ([]string, error)
+	GetImages(itemId int) ([]string, error)
 }
 
 type ItemService struct {
@@ -42,7 +42,7 @@ func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository)
 
 // Fetch items with provided params
 func (i *ItemService) Items(params domain.ItemInputData) ([]domain.ItemAPI, error) {
-	items, err := i.itemRepo.Items(params)
+	items, err := i.itemRepo.GetItems(params)
 	if err != nil {
 		return nil, err
 	}
@@ -73,12 +73,12 @@ func (i *ItemService) Update(item domain.ItemUpdate) error {
 }
 
 func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
-	item, err := i.itemRepo.ItemById(id)
+	item, err := i.itemRepo.GetItemById(id)
 	if err != nil {
 		return item, err
 	}
 
-	imagesId, err := i.imageRepo.Images(int(item.ID))
+	imagesId, err := i.imageRepo.GetImages(int(item.ID))
 	if err != nil {
 		return item, err
 	}
