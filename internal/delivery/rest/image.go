@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	errGetFile  = fmt.Errorf("failed get file")
-	errOpenFile = fmt.Errorf("failed open file")
-	errReadFile = fmt.Errorf("failed read file")
+	errGetFile   = fmt.Errorf("failed get file")
+	errOpenFile  = fmt.Errorf("failed open file")
+	errReadFile  = fmt.Errorf("failed read file")
+	errImageType = fmt.Errorf("incorrect image format. allowed image formats: .jpg/.png")
 )
 
 type ImageService interface {
@@ -69,13 +70,6 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: err.Error(),
-		})
-	}
-
-	mtype := mimetype.Detect(imageBytes)
-	if !(mtype.Is("image/jpeg") || mtype.Is("image/png")) {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "incorrect image format. allowed image formats: .jpg/.png",
 		})
 	}
 
@@ -163,6 +157,7 @@ func (i *ImageHandler) CreateTempImage(c echo.Context) error {
 	})
 }
 
+// read image file
 func (i *ImageHandler) file(c echo.Context) ([]byte, error) {
 	file, err := c.FormFile("image")
 	if err != nil {
@@ -178,6 +173,11 @@ func (i *ImageHandler) file(c echo.Context) ([]byte, error) {
 	imageBytes, err := io.ReadAll(image)
 	if err != nil {
 		return nil, errReadFile
+	}
+
+	mtype := mimetype.Detect(imageBytes)
+	if !(mtype.Is("image/jpeg") || mtype.Is("image/png")) {
+		return nil, errImageType
 	}
 
 	return imageBytes, nil

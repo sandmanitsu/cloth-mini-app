@@ -1,5 +1,13 @@
 import { optionBrands } from './brand.js';
 import { optionCategory } from './category.js';
+import { getImage } from './image.js';
+
+const IMAGE_GALLERY_WIDHT = 323
+const IMAGE_GALLERY_HEIGHT = 430
+const DEFAULT_IMAGE_ADDR = "http://localhost:8080/admin/static/img/no_image.jpg"
+
+// галлерея изображение {file_id => base64image}
+let imagesIds = [];
 
 /**
  * @typedef  {Object} updateData
@@ -11,6 +19,7 @@ import { optionCategory } from './category.js';
  * @property {number} discount - Процент скидки
  * @property {string} description - Описание товара
  * @property {string} outer_link - ссылка на товар
+ * @property {array} temp_images - галлерия изображений
  */
 async function create() {
     /**
@@ -24,10 +33,9 @@ async function create() {
         price: parseInt(document.getElementById('price').value),
         discount: parseInt(document.getElementById('discount').value),
         description: document.getElementById('description').value,
-        outer_link: document.getElementById('outer-link').value
+        outer_link: document.getElementById('outer-link').value,
+        temp_images: Object.keys(imagesIds),
     }
-
-    console.log(createData);
 
     try {
         const response = await fetch(`http://localhost:8080/item/create`, {
@@ -39,7 +47,7 @@ async function create() {
         });
 
         if (response.ok) {
-            window.location.replace('/admin/')
+            // window.location.replace('/admin/')
         } else {
             alert("Не удалось создать товар.");
             throw new Error(`Ошибка HTTP: ${response.status}`);
@@ -67,22 +75,70 @@ async function uploadImage(event) {
         const resp = await response.json();
         console.log(resp);
 
-        // getImage(fileid.file_id)
-        //     .then((base64Image) => {
-        //         const img = document.createElement('img')
-        //         img.setAttribute('id', fileid.file_id);
-        //         img.width = IMAGE_GALLERY_WIDHT
-        //         img.height = IMAGE_GALLERY_HEIGHT
-        //         img.alt = 'image'
-        //         img.src = base64Image
+        getImage(resp.file_id)
+            .then((base64Image) => {
+                imagesIds[resp.file_id] = base64Image
+                if (document.getElementById('image-main').src == DEFAULT_IMAGE_ADDR) {
+                    document.getElementById('image-main').src = base64Image
+                }
 
-        //         document.getElementById('image-gallery').appendChild(img);
+                const img = document.createElement('img')
+                img.setAttribute('id', resp.file_id);
+                img.width = IMAGE_GALLERY_WIDHT
+                img.height = IMAGE_GALLERY_HEIGHT
+                img.alt = 'image'
+                img.src = base64Image
 
-        //         createDeleteBtn(fileid.file_id)
-        //     })
+                document.getElementById('image-gallery').appendChild(img);
+
+                createDeleteBtn(resp.file_id)
+            })
     } catch (error) {
         console.error('Ошибка при загрузке изображения:', error);
     }
+}
+
+function createDeleteBtn(image) {
+    const container = document.getElementById('delete-btns')
+
+    // создаем кнопку
+    const button = document.createElement('button');
+    button.classList.add('u-full-width');
+    button.setAttribute('id', 'delete_btn');
+    button.setAttribute('image_id', image);
+    button.textContent = 'Удалить';
+
+    // Привязываем слушатель событий к кнопке
+    button.addEventListener('click', async (event) => {
+        const imageId = event.target.getAttribute('image_id');
+        const imageElement = document.getElementById(imageId);
+        if (imageElement) {
+            imageElement.remove();
+        }
+
+        event.target.remove();
+
+        // меняем/удаляем мейн изображение
+        if (imagesIds[image]) {
+            delete imagesIds[image]
+
+            const entries = Object.entries(imagesIds)
+
+            if (entries.length > 0) {
+                const [file_id, base64image] = entries[0];
+                document.getElementById('image-main').src = base64image
+            } else {
+                document.getElementById('image-main').src = DEFAULT_IMAGE_ADDR
+            }
+        }
+    });
+
+    // Вставка кнопки в контейнер
+    const div = document.createElement('div');
+    div.classList.add('three', 'columns');
+    div.appendChild(button);
+
+    container.appendChild(div);
 }
 
 document.addEventListener('DOMContentLoaded', () => {
