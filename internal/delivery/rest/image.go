@@ -2,6 +2,7 @@ package rest
 
 import (
 	"cloth-mini-app/internal/dto"
+	"context"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,9 +14,9 @@ import (
 
 type ImageService interface {
 	// Store image
-	CreateItemImage(itemId int, file []byte) (string, error)
+	CreateItemImage(ctx context.Context, itemId int, file []byte) (string, error)
 	// Get image from storage
-	Image(imageId string) (dto.FileDTO, error)
+	GetImage(imageId string) (dto.FileDTO, error)
 	// Delete image from db and storage
 	Delete(imageId string) error
 }
@@ -84,7 +85,7 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 		})
 	}
 
-	fileId, err := i.Service.CreateItemImage(itemId, imageBytes)
+	fileId, err := i.Service.CreateItemImage(context.Background(), itemId, imageBytes)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image. Maybe reached max image per item",
@@ -108,7 +109,7 @@ func (i *ImageHandler) Image(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	file, err := i.Service.Image(imageId.Id)
+	file, err := i.Service.GetImage(imageId.Id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting image from storage",
