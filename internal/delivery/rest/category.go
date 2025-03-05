@@ -9,7 +9,7 @@ import (
 )
 
 type CategoryService interface {
-	Categories() ([]domain.Category, error)
+	GetCategories() ([]domain.Category, error)
 }
 
 type CategoryHandler struct {
@@ -34,7 +34,7 @@ type Category struct {
 }
 
 func (c *CategoryHandler) Categories(ctx echo.Context) error {
-	categories, err := c.Service.Categories()
+	categories, err := c.Service.GetCategories()
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting categories",

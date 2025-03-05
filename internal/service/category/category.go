@@ -21,6 +21,6 @@ func NewCategoryService(logger *slog.Logger, categoryRepo CategoryRepository) *C
 	}
 }
 
-func (c *CategoryService) Categories() ([]domain.Category, error) {
+func (c *CategoryService) GetCategories() ([]domain.Category, error) {
 	return c.categoryRepo.GetCategories()
 }

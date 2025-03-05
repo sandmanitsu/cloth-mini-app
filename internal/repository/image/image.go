@@ -33,43 +33,17 @@ func NewImageRepository(logger *slog.Logger, db *postgresql.Storage) *ImageRepos
 }
 
 // insert image data to db with SELECT FOR UPDATE
-func (i *ImageRepository) Insert(itemId int, objectId string) error {
+func (i *ImageRepository) Insert(ctx context.Context, itemId int, objectId string) error {
 	const op = "repository.image.Insert"
 
-	ctx := context.Background()
 	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
 	}
 	defer tx.Rollback()
 
-	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
-	sql, args, err := psql.Select("*").From("images").Where("item_id = ?", itemId).Suffix("for update").ToSql()
+	imagePerItem, err := i.getImagesForUpdate(itemId)
 	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
-
-		return err
-	}
-
-	_, err = i.db.Query(sql, args...)
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
-
-		return err
-	}
-
-	sql, args, err = psql.Select("count(*)").From("images").Where("item_id = ?", itemId).ToSql()
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
-
-		return err
-	}
-
-	var imagePerItem int
-	err = i.db.QueryRow(sql, args...).Scan(&imagePerItem)
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
-
 		return err
 	}
 
@@ -79,7 +53,11 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 		return errMaxImages
 	}
 
-	sql, args, err = psql.Insert("images").Columns("item_id", "object_id", "uploaded_at").Values(itemId, objectId, time.Now()).ToSql()
+	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Insert("images").
+		Columns("item_id", "object_id", "uploaded_at").
+		Values(itemId, objectId, time.Now()).
+		ToSql()
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
 
@@ -98,6 +76,39 @@ func (i *ImageRepository) Insert(itemId int, objectId string) error {
 	}
 
 	return nil
+}
+
+// lock needed rows and return number of images related to provided itemId
+func (i *ImageRepository) getImagesForUpdate(itemId int) (int, error) {
+	const op = "repository.image.getItemsForUpdate"
+
+	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
+	sql, args, err := psql.Select("*").From("images").Where("item_id = ?", itemId).Suffix("for update").ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return 0, err
+	}
+
+	rows, err := i.db.Query(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return 0, err
+	}
+	defer rows.Close()
+
+	var imageCnt int
+	for rows.Next() {
+		if err := rows.Scan(); err != nil {
+			i.logger.Error(op, sl.Err(err))
+
+			return 0, err
+		}
+		imageCnt++
+	}
+
+	return imageCnt, nil
 }
 
 func (i *ImageRepository) GetImages(itemId int) ([]string, error) {

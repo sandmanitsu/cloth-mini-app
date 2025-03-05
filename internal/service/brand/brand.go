@@ -21,6 +21,6 @@ func NewBrandService(logger *slog.Logger, BrandRepo BrandRepository) *BrandServi
 	}
 }
 
-func (b *BrandService) Brands() ([]domain.Brand, error) {
+func (b *BrandService) GetBrands() ([]domain.Brand, error) {
 	return b.BrandRepo.GetBrands()
 }

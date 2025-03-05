@@ -41,7 +41,7 @@ func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository)
 }
 
 // Fetch items with provided params
-func (i *ItemService) Items(params domain.ItemInputData) ([]domain.ItemAPI, error) {
+func (i *ItemService) GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error) {
 	items, err := i.itemRepo.GetItems(params)
 	if err != nil {
 		return nil, err
@@ -72,7 +72,7 @@ func (i *ItemService) Update(item domain.ItemUpdate) error {
 	return nil
 }
 
-func (i *ItemService) ItemById(id int) (domain.ItemAPI, error) {
+func (i *ItemService) GetItemById(id int) (domain.ItemAPI, error) {
 	item, err := i.itemRepo.GetItemById(id)
 	if err != nil {
 		return item, err

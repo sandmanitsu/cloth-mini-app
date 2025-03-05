@@ -9,7 +9,7 @@ import (
 )
 
 type BrandService interface {
-	Brands() ([]domain.Brand, error)
+	GetBrands() ([]domain.Brand, error)
 }
 
 type BrandHandler struct {
@@ -33,7 +33,7 @@ type Brand struct {
 }
 
 func (b *BrandHandler) Brands(ctx echo.Context) error {
-	brands, err := b.Service.Brands()
+	brands, err := b.Service.GetBrands()
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting brands",

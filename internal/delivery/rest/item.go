@@ -14,9 +14,9 @@ import (
 
 type ItemService interface {
 	// Fetching items
-	Items(params domain.ItemInputData) ([]domain.ItemAPI, error)
+	GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error)
 	// Getting item by ID
-	ItemById(id int) (domain.ItemAPI, error)
+	GetItemById(id int) (domain.ItemAPI, error)
 	// Update item data
 	Update(item domain.ItemUpdate) error
 	// Create item
@@ -52,7 +52,7 @@ func (i *ItemHandler) Items(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	items, err := i.Service.Items(domain.ItemInputData{
+	items, err := i.Service.GetItems(domain.ItemInputData{
 		ID:         itemInput.ID,
 		BrandId:    itemInput.BrandId,
 		Name:       itemInput.Name,
@@ -135,7 +135,7 @@ func (i *ItemHandler) ItemById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	item, err := i.Service.ItemById(itemId.Id)
+	item, err := i.Service.GetItemById(itemId.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "no records with provided id"})

@@ -4,6 +4,7 @@ import (
 	"cloth-mini-app/internal/dto"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/minio"
+	"context"
 	"log/slog"
 
 	"github.com/google/uuid"
@@ -16,7 +17,7 @@ type MinioClient interface {
 }
 
 type ImageRepository interface {
-	Insert(itemId int, objectID string) error
+	Insert(ctx context.Context, itemId int, objectID string) error
 	Delete(imageId string) error
 }
 
@@ -35,7 +36,7 @@ func NewImageService(logger *slog.Logger, storage MinioClient, imageRepo ImageRe
 }
 
 // Put image to file storage storage and add file id to db
-func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) {
+func (i *ImageService) CreateItemImage(ctx context.Context, itemId int, file []byte) (string, error) {
 	objectID := uuid.New().String()
 
 	err := i.storage.Put(dto.FileDTO{
@@ -48,7 +49,7 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) 
 		return "", err
 	}
 
-	err = i.imageRepo.Insert(itemId, objectID)
+	err = i.imageRepo.Insert(ctx, itemId, objectID)
 	if err != nil {
 		// todo. что тогда делать с изображением в хранилище s3???
 		return "", err
@@ -58,7 +59,7 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) 
 }
 
 // Get image from storage
-func (i *ImageService) Image(imageId string) (file dto.FileDTO, err error) {
+func (i *ImageService) GetImage(imageId string) (file dto.FileDTO, err error) {
 	file, err = i.storage.Get(imageId)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
@@ -70,7 +71,7 @@ func (i *ImageService) Image(imageId string) (file dto.FileDTO, err error) {
 }
 
 // Get images from storage
-func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
+func (i *ImageService) GetImageMany(imageIds []string) ([]dto.FileDTO, error) {
 	files, err := i.storage.GetMany(imageIds)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
