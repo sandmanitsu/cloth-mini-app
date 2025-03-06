@@ -2,6 +2,7 @@ package rest
 
 import (
 	domain "cloth-mini-app/internal/domain/category"
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,7 +10,7 @@ import (
 )
 
 type CategoryService interface {
-	GetCategories() ([]domain.Category, error)
+	GetCategories(ctx context.Context) ([]domain.Category, error)
 }
 
 type CategoryHandler struct {
@@ -34,7 +35,7 @@ type Category struct {
 }
 
 func (c *CategoryHandler) Categories(ctx echo.Context) error {
-	categories, err := c.Service.GetCategories()
+	categories, err := c.Service.GetCategories(ctx.Request().Context())
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting categories",

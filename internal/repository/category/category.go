@@ -4,6 +4,7 @@ import (
 	domain "cloth-mini-app/internal/domain/category"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/postgresql"
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -23,7 +24,7 @@ func NewCategoryRepository(logger *slog.Logger, db *postgresql.Storage) *Categor
 	}
 }
 
-func (c *CategoryRepository) GetCategories() ([]domain.Category, error) {
+func (c *CategoryRepository) GetCategories(ctx context.Context) ([]domain.Category, error) {
 	const op = "repository.Category.Category"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

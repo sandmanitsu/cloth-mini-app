@@ -18,7 +18,7 @@ type MinioClient interface {
 
 type ImageRepository interface {
 	Insert(ctx context.Context, itemId int, objectID string) error
-	Delete(imageId string) error
+	Delete(ctx context.Context, imageId string) error
 }
 
 type ImageService struct {
@@ -59,7 +59,7 @@ func (i *ImageService) CreateItemImage(ctx context.Context, itemId int, file []b
 }
 
 // Get image from storage
-func (i *ImageService) GetImage(imageId string) (file dto.FileDTO, err error) {
+func (i *ImageService) GetImage(ctx context.Context, imageId string) (file dto.FileDTO, err error) {
 	file, err = i.storage.Get(imageId)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
@@ -71,7 +71,7 @@ func (i *ImageService) GetImage(imageId string) (file dto.FileDTO, err error) {
 }
 
 // Get images from storage
-func (i *ImageService) GetImageMany(imageIds []string) ([]dto.FileDTO, error) {
+func (i *ImageService) GetImageMany(ctx context.Context, imageIds []string) ([]dto.FileDTO, error) {
 	files, err := i.storage.GetMany(imageIds)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
@@ -82,6 +82,6 @@ func (i *ImageService) GetImageMany(imageIds []string) ([]dto.FileDTO, error) {
 	return files, nil
 }
 
-func (i *ImageService) Delete(imageId string) error {
-	return i.imageRepo.Delete(imageId)
+func (i *ImageService) Delete(ctx context.Context, imageId string) error {
+	return i.imageRepo.Delete(ctx, imageId)
 }

@@ -4,6 +4,7 @@ import (
 	domain "cloth-mini-app/internal/domain/item"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/postgresql"
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -31,7 +32,7 @@ func NewItemRepository(logger *slog.Logger, db *postgresql.Storage) *ItemReposit
 }
 
 // Get items records
-func (i *ItemRepository) GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error) {
+func (i *ItemRepository) GetItems(ctx context.Context, params domain.ItemInputData) ([]domain.ItemAPI, error) {
 	const op = "repository.item.Items"
 
 	var limit, offset uint64
@@ -154,7 +155,7 @@ func (i *ItemRepository) filterItems(params domain.ItemInputData) map[string]any
 }
 
 // Update item record by ID
-func (i *ItemRepository) Update(data domain.ItemUpdate) error {
+func (i *ItemRepository) Update(ctx context.Context, data domain.ItemUpdate) error {
 	const op = "repository.item.Update"
 
 	setState := i.updateSetStatements(data)
@@ -216,7 +217,7 @@ func (i *ItemRepository) updateSetStatements(item domain.ItemUpdate) map[string]
 	return data
 }
 
-func (i *ItemRepository) GetItemById(id int) (domain.ItemAPI, error) {
+func (i *ItemRepository) GetItemById(ctx context.Context, id int) (domain.ItemAPI, error) {
 	const op = "repository.item.ItemById"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -258,7 +259,7 @@ func (i *ItemRepository) GetItemById(id int) (domain.ItemAPI, error) {
 	return item, nil
 }
 
-func (i *ItemRepository) Create(item domain.ItemCreate) error {
+func (i *ItemRepository) Create(ctx context.Context, item domain.ItemCreate) error {
 	const op = "repository.item.Create"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
@@ -285,7 +286,7 @@ func (i *ItemRepository) Create(item domain.ItemCreate) error {
 	return nil
 }
 
-func (i *ItemRepository) Delete(id int) error {
+func (i *ItemRepository) Delete(ctx context.Context, id int) error {
 	const op = "repository.item.Delete"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).

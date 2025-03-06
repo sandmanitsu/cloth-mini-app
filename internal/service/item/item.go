@@ -3,26 +3,27 @@ package item
 import (
 	domain "cloth-mini-app/internal/domain/item"
 	sl "cloth-mini-app/internal/logger"
+	"context"
 	"fmt"
 	"log/slog"
 )
 
 type ItemRepository interface {
 	// Fetch items from db
-	GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error)
+	GetItems(ctx context.Context, params domain.ItemInputData) ([]domain.ItemAPI, error)
 	// Returning item by id
-	GetItemById(id int) (domain.ItemAPI, error)
+	GetItemById(ctx context.Context, id int) (domain.ItemAPI, error)
 	// Update item record
-	Update(data domain.ItemUpdate) error
+	Update(ctx context.Context, data domain.ItemUpdate) error
 	// Create item
-	Create(item domain.ItemCreate) error
+	Create(ctx context.Context, item domain.ItemCreate) error
 	// Delete item
-	Delete(id int) error
+	Delete(ctx context.Context, id int) error
 }
 
 type ImageRepository interface {
 	// Get images fileIds
-	GetImages(itemId int) ([]string, error)
+	GetImages(ctx context.Context, itemId int) ([]string, error)
 }
 
 type ItemService struct {
@@ -41,8 +42,8 @@ func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository)
 }
 
 // Fetch items with provided params
-func (i *ItemService) GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error) {
-	items, err := i.itemRepo.GetItems(params)
+func (i *ItemService) GetItems(ctx context.Context, params domain.ItemInputData) ([]domain.ItemAPI, error) {
+	items, err := i.itemRepo.GetItems(ctx, params)
 	if err != nil {
 		return nil, err
 	}
@@ -56,7 +57,7 @@ type ItemUpdateData struct {
 }
 
 // Prepare data to update
-func (i *ItemService) Update(item domain.ItemUpdate) error {
+func (i *ItemService) Update(ctx context.Context, item domain.ItemUpdate) error {
 	if item.ID == 0 {
 		err := fmt.Errorf("error: empty or invalid id")
 		i.logger.Error("update item", sl.Err(err))
@@ -64,7 +65,7 @@ func (i *ItemService) Update(item domain.ItemUpdate) error {
 		return err
 	}
 
-	err := i.itemRepo.Update(item)
+	err := i.itemRepo.Update(ctx, item)
 	if err != nil {
 		return err
 	}
@@ -72,13 +73,13 @@ func (i *ItemService) Update(item domain.ItemUpdate) error {
 	return nil
 }
 
-func (i *ItemService) GetItemById(id int) (domain.ItemAPI, error) {
-	item, err := i.itemRepo.GetItemById(id)
+func (i *ItemService) GetItemById(ctx context.Context, id int) (domain.ItemAPI, error) {
+	item, err := i.itemRepo.GetItemById(ctx, id)
 	if err != nil {
 		return item, err
 	}
 
-	imagesId, err := i.imageRepo.GetImages(int(item.ID))
+	imagesId, err := i.imageRepo.GetImages(ctx, int(item.ID))
 	if err != nil {
 		return item, err
 	}
@@ -88,10 +89,10 @@ func (i *ItemService) GetItemById(id int) (domain.ItemAPI, error) {
 	return item, err
 }
 
-func (i *ItemService) Create(item domain.ItemCreate) error {
-	return i.itemRepo.Create(item)
+func (i *ItemService) Create(ctx context.Context, item domain.ItemCreate) error {
+	return i.itemRepo.Create(ctx, item)
 }
 
-func (i *ItemService) Delete(id int) error {
-	return i.itemRepo.Delete(id)
+func (i *ItemService) Delete(ctx context.Context, id int) error {
+	return i.itemRepo.Delete(ctx, id)
 }

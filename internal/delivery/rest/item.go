@@ -2,6 +2,7 @@ package rest
 
 import (
 	domain "cloth-mini-app/internal/domain/item"
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -14,15 +15,15 @@ import (
 
 type ItemService interface {
 	// Fetching items
-	GetItems(params domain.ItemInputData) ([]domain.ItemAPI, error)
+	GetItems(ctx context.Context, params domain.ItemInputData) ([]domain.ItemAPI, error)
 	// Getting item by ID
-	GetItemById(id int) (domain.ItemAPI, error)
+	GetItemById(ctx context.Context, id int) (domain.ItemAPI, error)
 	// Update item data
-	Update(item domain.ItemUpdate) error
+	Update(ctx context.Context, item domain.ItemUpdate) error
 	// Create item
-	Create(item domain.ItemCreate) error
+	Create(ctx context.Context, item domain.ItemCreate) error
 	// Delete item
-	Delete(id int) error
+	Delete(ctx context.Context, id int) error
 }
 
 type ItemHandler struct {
@@ -52,7 +53,7 @@ func (i *ItemHandler) Items(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	items, err := i.Service.GetItems(domain.ItemInputData{
+	items, err := i.Service.GetItems(c.Request().Context(), domain.ItemInputData{
 		ID:         itemInput.ID,
 		BrandId:    itemInput.BrandId,
 		Name:       itemInput.Name,
@@ -106,7 +107,7 @@ func (i *ItemHandler) Update(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	i.Service.Update(domain.ItemUpdate{
+	i.Service.Update(c.Request().Context(), domain.ItemUpdate{
 		ID:          item.ID,
 		BrandId:     item.BrandId,
 		Name:        item.Name,
@@ -135,7 +136,7 @@ func (i *ItemHandler) ItemById(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	item, err := i.Service.GetItemById(itemId.Id)
+	item, err := i.Service.GetItemById(c.Request().Context(), itemId.Id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "no records with provided id"})
@@ -174,7 +175,7 @@ func (i *ItemHandler) Create(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: fmt.Sprintf("validation params : %s", err)})
 	}
 
-	err = i.Service.Create(domain.ItemCreate{
+	err = i.Service.Create(c.Request().Context(), domain.ItemCreate{
 		BrandId:     item.BrandId,
 		Name:        item.Name,
 		Description: item.Description,
@@ -201,7 +202,7 @@ func (i *ItemHandler) Delete(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	err = i.Service.Delete(itemId.Id)
+	err = i.Service.Delete(c.Request().Context(), itemId.Id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failed deleting item",

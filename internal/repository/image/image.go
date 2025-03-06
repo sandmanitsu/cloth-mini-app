@@ -111,7 +111,7 @@ func (i *ImageRepository) getImagesForUpdate(itemId int) (int, error) {
 	return imageCnt, nil
 }
 
-func (i *ImageRepository) GetImages(itemId int) ([]string, error) {
+func (i *ImageRepository) GetImages(ctx context.Context, itemId int) ([]string, error) {
 	const op = "repository.image.Images"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)
@@ -144,7 +144,7 @@ func (i *ImageRepository) GetImages(itemId int) ([]string, error) {
 	return imageIds, nil
 }
 
-func (i *ImageRepository) Delete(imageId string) error {
+func (i *ImageRepository) Delete(ctx context.Context, imageId string) error {
 	const op = "repository.image.Delete"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).

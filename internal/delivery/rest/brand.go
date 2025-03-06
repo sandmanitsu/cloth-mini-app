@@ -2,6 +2,7 @@ package rest
 
 import (
 	domain "cloth-mini-app/internal/domain/brand"
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,7 +10,7 @@ import (
 )
 
 type BrandService interface {
-	GetBrands() ([]domain.Brand, error)
+	GetBrands(ctx context.Context) ([]domain.Brand, error)
 }
 
 type BrandHandler struct {
@@ -33,7 +34,7 @@ type Brand struct {
 }
 
 func (b *BrandHandler) Brands(ctx echo.Context) error {
-	brands, err := b.Service.GetBrands()
+	brands, err := b.Service.GetBrands(ctx.Request().Context())
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting brands",

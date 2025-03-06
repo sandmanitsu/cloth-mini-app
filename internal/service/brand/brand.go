@@ -2,11 +2,12 @@ package brand
 
 import (
 	domain "cloth-mini-app/internal/domain/brand"
+	"context"
 	"log/slog"
 )
 
 type BrandRepository interface {
-	GetBrands() ([]domain.Brand, error)
+	GetBrands(ctx context.Context) ([]domain.Brand, error)
 }
 
 type BrandService struct {
@@ -21,6 +22,6 @@ func NewBrandService(logger *slog.Logger, BrandRepo BrandRepository) *BrandServi
 	}
 }
 
-func (b *BrandService) GetBrands() ([]domain.Brand, error) {
-	return b.BrandRepo.GetBrands()
+func (b *BrandService) GetBrands(ctx context.Context) ([]domain.Brand, error) {
+	return b.BrandRepo.GetBrands(ctx)
 }
