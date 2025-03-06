@@ -4,21 +4,21 @@ import (
 	"cloth-mini-app/internal/dto"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/minio"
+	"context"
 	"log/slog"
 
 	"github.com/google/uuid"
 )
 
 type MinioClient interface {
-	Put(file dto.FileDTO) error
-	Get(objectId string) (dto.FileDTO, error)
-	GetMany(objectIds []string) ([]dto.FileDTO, error)
+	Put(ctx context.Context, file dto.FileDTO) error
+	Get(ctx context.Context, objectId string) (dto.FileDTO, error)
+	GetMany(ctx context.Context, objectIds []string) ([]dto.FileDTO, error)
 }
 
 type ImageRepository interface {
-	Insert(itemId int, objectID string) error
-	Delete(imageId string) error
-	InsertTempImage(imageId string) error
+	Insert(ctx context.Context, itemId int, objectID string) error
+	Delete(ctx context.Context, imageId string) error
 }
 
 type ImageService struct {
@@ -36,10 +36,10 @@ func NewImageService(logger *slog.Logger, storage MinioClient, imageRepo ImageRe
 }
 
 // Put image to file storage storage and add file id to db
-func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) {
+func (i *ImageService) CreateItemImage(ctx context.Context, itemId int, file []byte) (string, error) {
 	objectID := uuid.New().String()
 
-	err := i.storage.Put(dto.FileDTO{
+	err := i.storage.Put(ctx, dto.FileDTO{
 		ID:          objectID,
 		ContentType: minio.ImageContentType,
 		Buffer:      file,
@@ -49,10 +49,9 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) 
 		return "", err
 	}
 
-	err = i.imageRepo.Insert(itemId, objectID)
+	err = i.imageRepo.Insert(ctx, itemId, objectID)
 	if err != nil {
 		// todo. что тогда делать с изображением в хранилище s3???
-		i.logger.Error("failet insert image to db", sl.Err(err))
 		return "", err
 	}
 
@@ -60,8 +59,8 @@ func (i *ImageService) CreateItemImage(itemId int, file []byte) (string, error) 
 }
 
 // Get image from storage
-func (i *ImageService) Image(imageId string) (file dto.FileDTO, err error) {
-	file, err = i.storage.Get(imageId)
+func (i *ImageService) GetImage(ctx context.Context, imageId string) (file dto.FileDTO, err error) {
+	file, err = i.storage.Get(ctx, imageId)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
 
@@ -72,8 +71,8 @@ func (i *ImageService) Image(imageId string) (file dto.FileDTO, err error) {
 }
 
 // Get images from storage
-func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
-	files, err := i.storage.GetMany(imageIds)
+func (i *ImageService) GetImageMany(ctx context.Context, imageIds []string) ([]dto.FileDTO, error) {
+	files, err := i.storage.GetMany(ctx, imageIds)
 	if err != nil {
 		i.logger.Error("failed getting image from storage", sl.Err(err))
 
@@ -83,28 +82,6 @@ func (i *ImageService) ImageMany(imageIds []string) ([]dto.FileDTO, error) {
 	return files, nil
 }
 
-func (i *ImageService) Delete(imageId string) error {
-	return i.imageRepo.Delete(imageId)
-}
-
-// Store temp image to storages
-func (i *ImageService) CreateTempImage(file []byte) (string, error) {
-	objectID := uuid.New().String()
-
-	err := i.storage.Put(dto.FileDTO{
-		ID:          objectID,
-		ContentType: minio.ImageContentType,
-		Buffer:      file,
-	})
-	if err != nil {
-		i.logger.Error("failet store image", sl.Err(err))
-		return "", err
-	}
-
-	err = i.imageRepo.InsertTempImage(objectID)
-	if err != nil {
-		return "", err
-	}
-
-	return objectID, nil
+func (i *ImageService) Delete(ctx context.Context, imageId string) error {
+	return i.imageRepo.Delete(ctx, imageId)
 }

@@ -1,7 +1,8 @@
 package rest
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/brand"
+	"context"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
@@ -9,7 +10,7 @@ import (
 )
 
 type BrandService interface {
-	Brands() ([]domain.Brand, error)
+	GetBrands(ctx context.Context) ([]domain.Brand, error)
 }
 
 type BrandHandler struct {
@@ -27,13 +28,26 @@ func NewBrandHandler(e *echo.Echo, srv BrandService) {
 	g.GET("/get", handler.Brands)
 }
 
+type Brand struct {
+	ID   int    `json:"brand_id"`
+	Name string `json:"brand_name"`
+}
+
 func (b *BrandHandler) Brands(ctx echo.Context) error {
-	categories, err := b.Service.Brands()
+	brands, err := b.Service.GetBrands(ctx.Request().Context())
 	if err != nil {
 		return ctx.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "getting categories",
+			Err: "getting brands",
 		})
 	}
 
-	return ctx.JSON(http.StatusOK, categories)
+	brandsResponse := make([]Brand, 0, len(brands))
+	for _, brand := range brands {
+		brandsResponse = append(brandsResponse, Brand{
+			ID:   brand.ID,
+			Name: brand.Name,
+		})
+	}
+
+	return ctx.JSON(http.StatusOK, brandsResponse)
 }

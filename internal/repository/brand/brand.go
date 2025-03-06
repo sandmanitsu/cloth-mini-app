@@ -1,9 +1,10 @@
 package brand
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/brand"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/postgresql"
+	"context"
 	"database/sql"
 	"fmt"
 	"log/slog"
@@ -23,7 +24,7 @@ func NewBrandRepository(logger *slog.Logger, db *postgresql.Storage) *BrandRepos
 	}
 }
 
-func (b *BrandRepository) Brands() ([]domain.Brand, error) {
+func (b *BrandRepository) GetBrands(ctx context.Context) ([]domain.Brand, error) {
 	const op = "repository.Brand.Brands"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar)

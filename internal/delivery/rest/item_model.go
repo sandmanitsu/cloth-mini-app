@@ -1,6 +1,19 @@
-package dto
+package rest
 
-type ItemDTO struct {
+type ItemQueryParams struct {
+	ID         *uint   `query:"id"`
+	BrandId    *uint   `query:"brand_id"`
+	Name       *string `query:"name"`
+	Sex        *int    `query:"sex"`
+	CategoryId *uint   `query:"category_id"`
+	MinPrice   *uint   `query:"min_price"`
+	MaxPrice   *uint   `query:"max_price"`
+	Discount   *uint   `query:"discount"`
+	Offset     *uint   `query:"offset"`
+	Limit      *uint   `query:"limit"`
+}
+
+type ItemUpdate struct {
 	ID          int     `param:"id"`
 	BrandId     *int    `json:"brand_id"`
 	Name        *string `json:"name"`
@@ -12,7 +25,7 @@ type ItemDTO struct {
 	OuterLink   *string `json:"outerlink"`
 }
 
-type ItemCreateDTO struct {
+type ItemCreate struct {
 	BrandId     int    `json:"brand_id" validate:"required"`
 	Name        string `json:"name" validate:"required"`
 	Description string `json:"description" validate:"required"`

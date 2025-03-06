@@ -1,12 +1,13 @@
 package category
 
 import (
-	"cloth-mini-app/internal/domain"
+	domain "cloth-mini-app/internal/domain/category"
+	"context"
 	"log/slog"
 )
 
 type CategoryRepository interface {
-	Categories() ([]domain.Category, error)
+	GetCategories(ctx context.Context) ([]domain.Category, error)
 }
 
 type CategoryService struct {
@@ -21,6 +22,6 @@ func NewCategoryService(logger *slog.Logger, categoryRepo CategoryRepository) *C
 	}
 }
 
-func (c *CategoryService) Categories() ([]domain.Category, error) {
-	return c.categoryRepo.Categories()
+func (c *CategoryService) GetCategories(ctx context.Context) ([]domain.Category, error) {
+	return c.categoryRepo.GetCategories(ctx)
 }
