@@ -54,7 +54,7 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 }
 
 // Put file to store
-func (m *MinioClient) Put(file dto.FileDTO) error {
+func (m *MinioClient) Put(ctx context.Context, file dto.FileDTO) error {
 	const op = "storage.minio.CreateImage"
 
 	reader := bytes.NewReader(file.Buffer)
@@ -69,7 +69,7 @@ func (m *MinioClient) Put(file dto.FileDTO) error {
 }
 
 // Get file from storage
-func (m *MinioClient) Get(objectId string) (dto.FileDTO, error) {
+func (m *MinioClient) Get(ctx context.Context, objectId string) (dto.FileDTO, error) {
 	const op = "storage.minio.GetImage"
 
 	obj, err := m.cl.GetObject(context.Background(), m.bucketName, objectId, minio.GetObjectOptions{})
@@ -98,15 +98,15 @@ func (m *MinioClient) Get(objectId string) (dto.FileDTO, error) {
 
 // Get many files from storage
 // Use worker pull with 10 workers (amount workers - workersCnt)
-func (m *MinioClient) GetMany(objectIds []string) ([]dto.FileDTO, error) {
-	_, cancel := context.WithCancel(context.Background())
+func (m *MinioClient) GetMany(ctx context.Context, objectIds []string) ([]dto.FileDTO, error) {
+	_, cancel := context.WithCancel(ctx)
 
 	workersCnt := 10
 	var worker = func(objectIdCh <-chan string, fileCh chan<- dto.FileDTO, errCh chan<- error, wg *sync.WaitGroup) {
 		for id := range objectIdCh {
 			defer wg.Done()
 
-			file, err := m.Get(id)
+			file, err := m.Get(ctx, id)
 			if err != nil {
 				errCh <- err
 				cancel()
