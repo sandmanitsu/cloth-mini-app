@@ -27,6 +27,8 @@ type ImageService interface {
 	GetImage(ctx context.Context, imageId string) (dto.FileDTO, error)
 	// Delete image from db and storage
 	Delete(ctx context.Context, imageId string) error
+	//
+	CreateTempImage(ctx context.Context, file []byte) (string, error)
 }
 
 type ImageHandler struct {
@@ -69,28 +71,6 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failed get file",
-		})
-	}
-
-	image, err := file.Open()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "failed open file",
-		})
-	}
-	defer image.Close()
-
-	imageBytes, err := io.ReadAll(image)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "failed read file",
-		})
-	}
-
-	mtype := mimetype.Detect(imageBytes)
-	if !(mtype.Is("image/jpeg") || mtype.Is("image/png")) {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "incorrect image format. allowed image formats: .jpg/.png",
 		})
 	}
 
@@ -166,7 +146,7 @@ func (i *ImageHandler) CreateTempImage(c echo.Context) error {
 		})
 	}
 
-	fileId, err := i.Service.CreateTempImage(imageBytes)
+	fileId, err := i.Service.CreateTempImage(c.Request().Context(), imageBytes)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image. Maybe reached max image per item",

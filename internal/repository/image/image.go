@@ -168,7 +168,7 @@ func (i *ImageRepository) Delete(ctx context.Context, imageId string) error {
 	return nil
 }
 
-func (i *ImageRepository) InsertTempImage(objectId string) error {
+func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) error {
 	const op = "repository.image.InsertTempImage"
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
