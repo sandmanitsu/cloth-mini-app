@@ -2,6 +2,7 @@ package rest
 
 import (
 	"cloth-mini-app/internal/dto"
+	"context"
 	"io"
 	"net/http"
 	"strconv"
@@ -13,11 +14,11 @@ import (
 
 type ImageService interface {
 	// Store image
-	CreateItemImage(itemId int, file []byte) (string, error)
+	CreateItemImage(ctx context.Context, itemId int, file []byte) (string, error)
 	// Get image from storage
-	Image(imageId string) (dto.FileDTO, error)
+	GetImage(ctx context.Context, imageId string) (dto.FileDTO, error)
 	// Delete image from db and storage
-	Delete(imageId string) error
+	Delete(ctx context.Context, imageId string) error
 }
 
 type ImageHandler struct {
@@ -84,7 +85,7 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 		})
 	}
 
-	fileId, err := i.Service.CreateItemImage(itemId, imageBytes)
+	fileId, err := i.Service.CreateItemImage(c.Request().Context(), itemId, imageBytes)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image. Maybe reached max image per item",
@@ -108,7 +109,7 @@ func (i *ImageHandler) Image(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "binding params"})
 	}
 
-	file, err := i.Service.Image(imageId.Id)
+	file, err := i.Service.GetImage(c.Request().Context(), imageId.Id)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "getting image from storage",
@@ -137,7 +138,7 @@ func (i *ImageHandler) Delete(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "image_id not provided"})
 	}
 
-	err = i.Service.Delete(imageId)
+	err = i.Service.Delete(c.Request().Context(), imageId)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "failed deleting image"})
 	}
