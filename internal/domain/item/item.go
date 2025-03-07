@@ -41,6 +41,7 @@ type ItemCreate struct {
 	Price       uint
 	Discount    uint
 	OuterLink   string
+	Images      []string
 }
 
 type ItemInputData struct {

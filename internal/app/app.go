@@ -1,6 +1,7 @@
 package app
 
 import (
+	"cloth-mini-app/internal/background"
 	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/delivery/rest"
 	sl "cloth-mini-app/internal/logger"
@@ -8,6 +9,7 @@ import (
 	categoryRepo "cloth-mini-app/internal/repository/category"
 	imageRepo "cloth-mini-app/internal/repository/image"
 	itemRepo "cloth-mini-app/internal/repository/item"
+	itemImageRepo "cloth-mini-app/internal/repository/item_image"
 	"cloth-mini-app/internal/service/brand"
 	"cloth-mini-app/internal/service/category"
 	"cloth-mini-app/internal/service/image"
@@ -42,12 +44,17 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	categoryRepo := categoryRepo.NewCategoryRepository(logger, storage)
 	brandRepo := brandRepo.NewBrandRepository(logger, storage)
 	imageRepo := imageRepo.NewImageRepository(logger, storage)
+	itemImageRepo := itemImageRepo.NewItemImageRepository(logger, storage)
 
 	// prepare services
-	itemService := item.NewItemService(logger, itemRepo, imageRepo)
+	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo)
 	categoryService := category.NewCategoryService(logger, categoryRepo)
 	brandService := brand.NewBrandService(logger, brandRepo)
 	imageService := image.NewImageService(logger, minioClient, imageRepo)
+
+	// backgrounds tasks
+	backgroundTask := background.NewBackgroundTask(logger, minioClient, imageRepo)
+	backgroundTask.TempImage.StartDeleteTempImage()
 
 	e := echo.New()
 	e.Static("/admin/static", "public")

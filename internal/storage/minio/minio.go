@@ -153,3 +153,12 @@ func (m *MinioClient) GetMany(ctx context.Context, objectIds []string) ([]dto.Fi
 
 	return files, nil
 }
+
+func (m *MinioClient) Delete(fileId string) error {
+	err := m.cl.RemoveObject(context.Background(), m.bucketName, fileId, minio.RemoveObjectOptions{})
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

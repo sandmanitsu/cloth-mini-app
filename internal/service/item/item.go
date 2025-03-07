@@ -15,8 +15,8 @@ type ItemRepository interface {
 	GetItemById(ctx context.Context, id int) (domain.ItemAPI, error)
 	// Update item record
 	Update(ctx context.Context, data domain.ItemUpdate) error
-	// Create item
-	Create(ctx context.Context, item domain.ItemCreate) error
+	// // Create item
+	// Create(ctx context.Context, item domain.ItemCreate) (int64, error)
 	// Delete item
 	Delete(ctx context.Context, id int) error
 }
@@ -26,18 +26,24 @@ type ImageRepository interface {
 	GetImages(ctx context.Context, itemId int) ([]string, error)
 }
 
+type ItemImageRepository interface {
+	Create(ctx context.Context, item domain.ItemCreate) error
+}
+
 type ItemService struct {
-	logger    *slog.Logger
-	itemRepo  ItemRepository
-	imageRepo ImageRepository
+	logger        *slog.Logger
+	itemRepo      ItemRepository
+	imageRepo     ImageRepository
+	itemImageRepo ItemImageRepository
 }
 
 // Get item service object that represent the rest.ItemService interface
-func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository) *ItemService {
+func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository) *ItemService {
 	return &ItemService{
-		logger:    logger,
-		itemRepo:  ir,
-		imageRepo: imr,
+		logger:        logger,
+		itemRepo:      ir,
+		imageRepo:     imr,
+		itemImageRepo: itimr,
 	}
 }
 
@@ -90,7 +96,7 @@ func (i *ItemService) GetItemById(ctx context.Context, id int) (domain.ItemAPI, 
 }
 
 func (i *ItemService) Create(ctx context.Context, item domain.ItemCreate) error {
-	return i.itemRepo.Create(ctx, item)
+	return i.itemImageRepo.Create(ctx, item)
 }
 
 func (i *ItemService) Delete(ctx context.Context, id int) error {
