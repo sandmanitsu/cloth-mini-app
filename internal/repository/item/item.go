@@ -259,40 +259,6 @@ func (i *ItemRepository) GetItemById(ctx context.Context, id int) (domain.ItemAP
 	return item, nil
 }
 
-func (i *ItemRepository) Create(ctx context.Context, item domain.ItemCreate) (int64, error) {
-	const op = "repository.item.Create"
-
-	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
-		Insert("items").
-		Columns("brand_id", "name", "description", "sex", "category_id", "price", "discount", "outer_link", "created_at").
-		Values(item.BrandId, item.Name, item.Description, item.Sex, item.CategoryId, item.Price, item.Discount, item.OuterLink, time.Now())
-
-	sql, args, err := psql.ToSql()
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
-
-		return 0, err
-	}
-
-	fmt.Println(sql, args)
-
-	result, err := i.db.Exec(sql, args...)
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
-
-		return 0, err
-	}
-
-	itemid, err := result.LastInsertId()
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
-
-		return 0, err
-	}
-
-	return itemid, nil
-}
-
 func (i *ItemRepository) Delete(ctx context.Context, id int) error {
 	const op = "repository.item.Delete"
 

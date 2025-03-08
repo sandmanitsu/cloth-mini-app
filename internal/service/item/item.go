@@ -15,8 +15,6 @@ type ItemRepository interface {
 	GetItemById(ctx context.Context, id int) (domain.ItemAPI, error)
 	// Update item record
 	Update(ctx context.Context, data domain.ItemUpdate) error
-	// // Create item
-	// Create(ctx context.Context, item domain.ItemCreate) (int64, error)
 	// Delete item
 	Delete(ctx context.Context, id int) error
 }
