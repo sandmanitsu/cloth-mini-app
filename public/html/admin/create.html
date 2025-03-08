@@ -22,8 +22,8 @@
             <div class="container">
                 <div class="four columns">
                     <div class="row">
-                        <img src="static/img/no_image.jpg" width="100%" height="auto" alt="mock image">
-                        <button class="u-full-width" id="update_btn">Загрузить изображение</button>
+                        <img id="image-main" src="static/img/no_image.jpg" width="100%" height="auto" alt="mock image">
+                        <button class="u-full-width" id="upload_btn">Загрузить изображение</button>
                     </div>
                 </div>
 
@@ -79,6 +79,24 @@
                     <textarea id="description" cols="50" rows="5" placeholder="Описание товара..."></textarea>
                 </div>
             </div>
+        </div>
+
+        <div style="display: none;" id="image_upload">
+            <div id="image-gallery" class="container">
+                <!-- изображения -->
+            </div>
+
+            <div id="delete-btns" class="container">
+                <!-- кнопки удаления изображения -->
+            </div>
+
+            <form id="image-form">
+                <label for="image">Загрузите изображение:</label>
+                <input type="file" id="image" name="image" accept="image/png, image/jpeg"><br><br>
+                <button type="submit">Отправить</button>
+            </form>
+
+            <button class="u-full-width" id="back_btn">Назад к редактированию параметров</button>
         </div>
 
         <div class="container">

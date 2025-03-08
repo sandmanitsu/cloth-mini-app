@@ -26,12 +26,13 @@ type ItemUpdate struct {
 }
 
 type ItemCreate struct {
-	BrandId     int    `json:"brand_id" validate:"required"`
-	Name        string `json:"name" validate:"required"`
-	Description string `json:"description" validate:"required"`
-	Sex         int    `json:"sex" validate:"required"`
-	CategoryId  int    `json:"category_id" validate:"required"`
-	Price       uint   `json:"price" validate:"required"`
-	Discount    uint   `json:"discount"`
-	OuterLink   string `json:"outer_link" validate:"required"`
+	BrandId     int      `json:"brand_id" validate:"required"`
+	Name        string   `json:"name" validate:"required"`
+	Description string   `json:"description" validate:"required"`
+	Sex         int      `json:"sex" validate:"required"`
+	CategoryId  int      `json:"category_id" validate:"required"`
+	Price       uint     `json:"price" validate:"required"`
+	Discount    uint     `json:"discount"`
+	OuterLink   string   `json:"outer_link" validate:"required"`
+	Images      []string `json:"temp_images" validate:"max=4"`
 }
