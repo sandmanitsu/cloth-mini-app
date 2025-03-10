@@ -5,6 +5,7 @@ import (
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/minio"
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -50,7 +51,7 @@ func (i *ImageBackground) StartDeleteTempImage() {
 			case <-ticker.C:
 				ctx := context.Background()
 
-				i.imageRepo.DeleteTempImage(ctx, func(images []domain.TempImage) ([]domain.TempImage, error) {
+				err := i.imageRepo.DeleteTempImage(ctx, func(images []domain.TempImage) ([]domain.TempImage, error) {
 					if len(images) == 0 {
 						return nil, errNoImageToDelete
 					}
@@ -72,6 +73,10 @@ func (i *ImageBackground) StartDeleteTempImage() {
 
 					return deletingImage, nil
 				})
+
+				if err != nil && !errors.Is(err, errNoImageToDelete) {
+					i.logger.Debug(op, sl.Err(err))
+				}
 			}
 		}
 	}()

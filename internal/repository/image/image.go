@@ -237,7 +237,7 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]d
 }
 
 func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]domain.TempImage, error) {
-	const op = "repository.image.GetTempImages"
+	const op = "repository.image.getTempImagesTx"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select("id", "object_id", "uploaded_at").
@@ -273,7 +273,7 @@ func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]do
 }
 
 func (i *ImageRepository) deleteTempImageTx(ctx context.Context, tx *sql.Tx, imageIds []uint) error {
-	const op = "repository.image.DeleteTempImage"
+	const op = "repository.image.deleteTempImageTx"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Delete("").
