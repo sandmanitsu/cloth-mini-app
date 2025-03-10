@@ -25,6 +25,7 @@ type ImageRepository interface {
 }
 
 type ItemImageRepository interface {
+	// Create temp image, stored it to s3 and db
 	Create(ctx context.Context, item domain.ItemCreate) error
 }
 

@@ -4,6 +4,7 @@ import (
 	domain "cloth-mini-app/internal/domain/image"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/minio"
+	"context"
 	"fmt"
 	"log/slog"
 	"time"
@@ -15,8 +16,10 @@ const (
 )
 
 type ImageRepository interface {
-	GetTempImages() ([]domain.TempImage, error)
-	DeleteTempImage(id uint) error
+	// Fetch temp images
+	GetTempImages(ctx context.Context) ([]domain.TempImage, error)
+	// Delete temp images data into db
+	DeleteTempImage(ctx context.Context, id uint) error
 }
 
 type ImageBackground struct {
@@ -43,7 +46,8 @@ func (i *ImageBackground) StartDeleteTempImage() {
 		for {
 			select {
 			case <-ticker.C:
-				images, err := i.imageRepo.GetTempImages()
+				ctx := context.Background()
+				images, err := i.imageRepo.GetTempImages(ctx)
 				if err != nil {
 					continue
 				}
@@ -55,14 +59,14 @@ func (i *ImageBackground) StartDeleteTempImage() {
 				for _, image := range images {
 					curr := time.Now()
 					if curr.Sub(image.UploadedAt) > ttl {
-						err := i.imageRepo.DeleteTempImage(image.ID)
+						err := i.imageRepo.DeleteTempImage(ctx, image.ID)
 						if err != nil {
 							i.logger.Error(fmt.Sprintf("%s: failed delete image from db", op), sl.Err(err))
 
 							continue
 						}
 
-						err = i.minioCl.Delete(image.ObjectId)
+						err = i.minioCl.Delete(ctx, image.ObjectId)
 						if err != nil {
 							i.logger.Error(fmt.Sprintf("%s: failed delete image from s3", op), sl.Err(err))
 

@@ -200,7 +200,7 @@ func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) 
 	return nil
 }
 
-func (i *ImageRepository) GetTempImages() ([]domain.TempImage, error) {
+func (i *ImageRepository) GetTempImages(ctx context.Context) ([]domain.TempImage, error) {
 	const op = "repository.image.GetTempImages"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
@@ -235,7 +235,7 @@ func (i *ImageRepository) GetTempImages() ([]domain.TempImage, error) {
 	return images, nil
 }
 
-func (i *ImageRepository) DeleteTempImage(imageId uint) error {
+func (i *ImageRepository) DeleteTempImage(ctx context.Context, imageId uint) error {
 	const op = "repository.image.DeleteTempImage"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
