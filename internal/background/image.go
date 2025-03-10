@@ -20,11 +20,7 @@ var (
 )
 
 type ImageRepository interface {
-	// Fetch temp images
-	// GetTempImages(ctx context.Context) ([]domain.TempImage, error)
-	// // Delete temp images data into db
-	// DeleteTempImage(ctx context.Context, id uint) error
-	//
+	// Delete temp images data into db
 	DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error
 }
 
