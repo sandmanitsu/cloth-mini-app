@@ -200,12 +200,49 @@ func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) 
 	return nil
 }
 
-func (i *ImageRepository) GetTempImages(ctx context.Context) ([]domain.TempImage, error) {
+func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error {
+	const op = "repository.image.DeleteTempImage"
+
+	tx, err := i.db.BeginTx(ctx, nil)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
+	}
+	defer tx.Rollback()
+
+	images, err := i.getTempImagesTx(ctx, tx)
+	if err != nil {
+		return err
+	}
+
+	images, err = deleteFn(images)
+	if err != nil {
+		return err
+	}
+
+	ids := make([]uint, 0, len(images))
+	for _, image := range images {
+		ids = append(ids, image.ID)
+	}
+	if err = i.deleteTempImageTx(ctx, tx, ids); err != nil {
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		i.logger.Error(fmt.Sprintf("%s : failed commit transaction", op), sl.Err(err))
+
+		return err
+	}
+
+	return nil
+}
+
+func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]domain.TempImage, error) {
 	const op = "repository.image.GetTempImages"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select("id", "object_id", "uploaded_at").
 		From("temp_images").
+		Suffix("for update").
 		ToSql()
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
@@ -213,7 +250,7 @@ func (i *ImageRepository) GetTempImages(ctx context.Context) ([]domain.TempImage
 		return nil, err
 	}
 
-	rows, err := i.db.Query(sql, args...)
+	rows, err := tx.Query(sql, args...)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
 
@@ -235,13 +272,13 @@ func (i *ImageRepository) GetTempImages(ctx context.Context) ([]domain.TempImage
 	return images, nil
 }
 
-func (i *ImageRepository) DeleteTempImage(ctx context.Context, imageId uint) error {
+func (i *ImageRepository) deleteTempImageTx(ctx context.Context, tx *sql.Tx, imageIds []uint) error {
 	const op = "repository.image.DeleteTempImage"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Delete("").
 		From("temp_images").
-		Where("id = ?", imageId).
+		Where(squirrel.Eq{"id": imageIds}).
 		ToSql()
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
@@ -249,14 +286,14 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, imageId uint) err
 		return err
 	}
 
-	_, err = i.db.Exec(sql, args...)
+	_, err = tx.Exec(sql, args...)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
 
 		return err
 	}
 
-	i.logger.Info(fmt.Sprintf("%s: delete temp image %d", op, imageId))
+	i.logger.Info(fmt.Sprintf("%s: delete temp image %v", op, imageIds))
 
 	return nil
 }

@@ -15,11 +15,17 @@ const (
 	ttl       = time.Minute * 30 // todo. поправить на time.Hour
 )
 
+var (
+	errNoImageToDelete = fmt.Errorf("no image to delete")
+)
+
 type ImageRepository interface {
 	// Fetch temp images
-	GetTempImages(ctx context.Context) ([]domain.TempImage, error)
-	// Delete temp images data into db
-	DeleteTempImage(ctx context.Context, id uint) error
+	// GetTempImages(ctx context.Context) ([]domain.TempImage, error)
+	// // Delete temp images data into db
+	// DeleteTempImage(ctx context.Context, id uint) error
+	//
+	DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error
 }
 
 type ImageBackground struct {
@@ -47,33 +53,29 @@ func (i *ImageBackground) StartDeleteTempImage() {
 			select {
 			case <-ticker.C:
 				ctx := context.Background()
-				images, err := i.imageRepo.GetTempImages(ctx)
-				if err != nil {
-					continue
-				}
 
-				if len(images) == 0 {
-					continue
-				}
+				i.imageRepo.DeleteTempImage(ctx, func(images []domain.TempImage) ([]domain.TempImage, error) {
+					if len(images) == 0 {
+						return nil, errNoImageToDelete
+					}
 
-				for _, image := range images {
-					curr := time.Now()
-					if curr.Sub(image.UploadedAt) > ttl {
-						err = i.minioCl.Delete(ctx, image.ObjectId)
-						if err != nil {
-							i.logger.Error(fmt.Sprintf("%s: failed delete image from s3", op), sl.Err(err))
+					deletingImage := make([]domain.TempImage, 0, len(images))
 
-							continue
-						}
+					for _, image := range images {
+						curr := time.Now()
+						if curr.Sub(image.UploadedAt) > ttl {
+							deletingImage = append(deletingImage, image)
+							err := i.minioCl.Delete(ctx, image.ObjectId)
+							if err != nil {
+								i.logger.Error(fmt.Sprintf("%s: failed delete image from s3", op), sl.Err(err))
 
-						err := i.imageRepo.DeleteTempImage(ctx, image.ID)
-						if err != nil {
-							i.logger.Error(fmt.Sprintf("%s: failed delete image from db", op), sl.Err(err))
-
-							continue
+								return nil, err
+							}
 						}
 					}
-				}
+
+					return deletingImage, nil
+				})
 			}
 		}
 	}()
