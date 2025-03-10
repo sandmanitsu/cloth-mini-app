@@ -59,16 +59,16 @@ func (i *ImageBackground) StartDeleteTempImage() {
 				for _, image := range images {
 					curr := time.Now()
 					if curr.Sub(image.UploadedAt) > ttl {
-						err := i.imageRepo.DeleteTempImage(ctx, image.ID)
+						err = i.minioCl.Delete(ctx, image.ObjectId)
 						if err != nil {
-							i.logger.Error(fmt.Sprintf("%s: failed delete image from db", op), sl.Err(err))
+							i.logger.Error(fmt.Sprintf("%s: failed delete image from s3", op), sl.Err(err))
 
 							continue
 						}
 
-						err = i.minioCl.Delete(ctx, image.ObjectId)
+						err := i.imageRepo.DeleteTempImage(ctx, image.ID)
 						if err != nil {
-							i.logger.Error(fmt.Sprintf("%s: failed delete image from s3", op), sl.Err(err))
+							i.logger.Error(fmt.Sprintf("%s: failed delete image from db", op), sl.Err(err))
 
 							continue
 						}
