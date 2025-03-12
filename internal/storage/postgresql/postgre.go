@@ -12,6 +12,8 @@ type AdvisoryLockId int
 
 const (
 	TempImageAdvisoryLockId AdvisoryLockId = 01
+
+	duplicateKeyCode = "23505"
 )
 
 type Storage struct {
@@ -63,7 +65,7 @@ func AdvisoryUnlock(db *sql.DB, id AdvisoryLockId) error {
 
 func IsDuplicateKeyError(err error) bool {
 	if pqErr, ok := err.(*pq.Error); ok {
-		return pqErr.Code == "23505"
+		return pqErr.Code == duplicateKeyCode
 	}
 
 	return false
