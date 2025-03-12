@@ -14,8 +14,7 @@ import (
 )
 
 var (
-	errMaxImages  = fmt.Errorf("reached max images per item")
-	errImageExist = fmt.Errorf("image already exist")
+	errMaxImages = fmt.Errorf("reached max images per item")
 )
 
 const (
