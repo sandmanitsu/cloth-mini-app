@@ -61,6 +61,7 @@ async function uploadImage(event) {
     event.preventDefault();
 
     let formData = new FormData(event.target)
+    formData.append('uuid', crypto.randomUUID())
 
     try {
         const response = await fetch(`http://localhost:8080/image/temp`, {

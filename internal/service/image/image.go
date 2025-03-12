@@ -88,11 +88,14 @@ func (i *ImageService) Delete(ctx context.Context, imageId string) error {
 }
 
 // Store temp image to storages
-func (i *ImageService) CreateTempImage(ctx context.Context, file []byte) (string, error) {
-	objectID := uuid.New().String()
+func (i *ImageService) CreateTempImage(ctx context.Context, file []byte, uuid string) (string, error) {
+	err := i.imageRepo.InsertTempImage(ctx, uuid)
+	if err != nil {
+		return "", err
+	}
 
-	err := i.storage.Put(ctx, dto.FileDTO{
-		ID:          objectID,
+	err = i.storage.Put(ctx, dto.FileDTO{
+		ID:          uuid,
 		ContentType: minio.ImageContentType,
 		Buffer:      file,
 	})
@@ -101,10 +104,5 @@ func (i *ImageService) CreateTempImage(ctx context.Context, file []byte) (string
 		return "", err
 	}
 
-	err = i.imageRepo.InsertTempImage(ctx, objectID)
-	if err != nil {
-		return "", err
-	}
-
-	return objectID, nil
+	return uuid, nil
 }

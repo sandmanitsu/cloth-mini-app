@@ -5,7 +5,13 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
+)
+
+type AdvisoryLockId int
+
+const (
+	TempImageAdvisoryLockId AdvisoryLockId = 01
 )
 
 type Storage struct {
@@ -35,4 +41,30 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 	}
 
 	return &Storage{DB: db}, nil
+}
+
+func AdvisoryLock(db *sql.DB, id AdvisoryLockId) error {
+	_, err := db.Exec("SELECT pg_advisory_lock($1)", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func AdvisoryUnlock(db *sql.DB, id AdvisoryLockId) error {
+	_, err := db.Exec("SELECT pg_advisory_unlock($1)", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func IsDuplicateKeyError(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == "23505"
+	}
+
+	return false
 }

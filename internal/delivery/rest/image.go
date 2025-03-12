@@ -27,8 +27,8 @@ type ImageService interface {
 	GetImage(ctx context.Context, imageId string) (dto.FileDTO, error)
 	// Delete image from db and storage
 	Delete(ctx context.Context, imageId string) error
-	//
-	CreateTempImage(ctx context.Context, file []byte) (string, error)
+	// Create temp image
+	CreateTempImage(ctx context.Context, file []byte, uuid string) (string, error)
 }
 
 type ImageHandler struct {
@@ -138,6 +138,10 @@ func (i *ImageHandler) Delete(c echo.Context) error {
 	})
 }
 
+type UUID struct {
+	Uuid string `param:"uuid"`
+}
+
 func (i *ImageHandler) CreateTempImage(c echo.Context) error {
 	imageBytes, err := i.file(c)
 	if err != nil {
@@ -146,7 +150,7 @@ func (i *ImageHandler) CreateTempImage(c echo.Context) error {
 		})
 	}
 
-	fileId, err := i.Service.CreateTempImage(c.Request().Context(), imageBytes)
+	fileId, err := i.Service.CreateTempImage(c.Request().Context(), imageBytes, c.FormValue("uuid"))
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failet store image. Maybe reached max image per item",

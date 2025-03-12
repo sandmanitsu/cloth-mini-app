@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	errMaxImages = fmt.Errorf("reached max images per item")
+	errMaxImages  = fmt.Errorf("reached max images per item")
+	errImageExist = fmt.Errorf("image already exist")
 )
 
 const (
@@ -192,6 +193,9 @@ func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) 
 
 	_, err = i.db.Exec(sql, args...)
 	if err != nil {
+		if postgresql.IsDuplicateKeyError(err) {
+			return nil
+		}
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
 
 		return err
@@ -203,13 +207,20 @@ func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) 
 func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error {
 	const op = "repository.image.DeleteTempImage"
 
+	if err := postgresql.AdvisoryLock(i.db, postgresql.TempImageAdvisoryLockId); err != nil {
+		i.logger.Error(fmt.Sprintf("%s : %s", op, "failed get advisory_lock"), sl.Err(err))
+
+		return err
+	}
+	defer postgresql.AdvisoryUnlock(i.db, postgresql.TempImageAdvisoryLockId)
+
 	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
 	}
 	defer tx.Rollback()
 
-	images, err := i.getTempImagesTx(ctx, tx)
+	images, err := i.getTempImages(ctx)
 	if err != nil {
 		return err
 	}
@@ -223,7 +234,7 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]d
 	for _, image := range images {
 		ids = append(ids, image.ID)
 	}
-	if err = i.deleteTempImageTx(ctx, tx, ids); err != nil {
+	if err = i.deleteTempImage(ctx, ids); err != nil {
 		return err
 	}
 
@@ -236,8 +247,8 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]d
 	return nil
 }
 
-func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]domain.TempImage, error) {
-	const op = "repository.image.getTempImagesTx"
+func (i *ImageRepository) getTempImages(ctx context.Context) ([]domain.TempImage, error) {
+	const op = "repository.image.getTempImages"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select("id", "object_id", "uploaded_at").
@@ -250,7 +261,7 @@ func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]do
 		return nil, err
 	}
 
-	rows, err := tx.Query(sql, args...)
+	rows, err := i.db.Query(sql, args...)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
 
@@ -272,8 +283,8 @@ func (i *ImageRepository) getTempImagesTx(ctx context.Context, tx *sql.Tx) ([]do
 	return images, nil
 }
 
-func (i *ImageRepository) deleteTempImageTx(ctx context.Context, tx *sql.Tx, imageIds []uint) error {
-	const op = "repository.image.deleteTempImageTx"
+func (i *ImageRepository) deleteTempImage(ctx context.Context, imageIds []uint) error {
+	const op = "repository.image.deleteTempImage"
 
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Delete("").
@@ -286,14 +297,14 @@ func (i *ImageRepository) deleteTempImageTx(ctx context.Context, tx *sql.Tx, ima
 		return err
 	}
 
-	_, err = tx.Exec(sql, args...)
+	_, err = i.db.Exec(sql, args...)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
 
 		return err
 	}
 
-	i.logger.Info(fmt.Sprintf("%s: delete temp image %v", op, imageIds))
+	i.logger.Info(fmt.Sprintf("%s: delete temp image %d", op, len(imageIds)))
 
 	return nil
 }
