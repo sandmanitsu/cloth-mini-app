@@ -214,12 +214,6 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]d
 	}
 	defer postgresql.AdvisoryUnlock(i.db, postgresql.TempImageAdvisoryLockId)
 
-	tx, err := i.db.BeginTx(ctx, nil)
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
-	}
-	defer tx.Rollback()
-
 	images, err := i.getTempImages(ctx)
 	if err != nil {
 		return err
@@ -235,12 +229,6 @@ func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]d
 		ids = append(ids, image.ID)
 	}
 	if err = i.deleteTempImage(ctx, ids); err != nil {
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		i.logger.Error(fmt.Sprintf("%s : failed commit transaction", op), sl.Err(err))
-
 		return err
 	}
 
