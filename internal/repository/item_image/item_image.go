@@ -13,6 +13,15 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
+type txKey string
+
+var (
+	// tx key in context
+	ctxTxKey = txKey("tx")
+
+	errGetTransaction = fmt.Errorf("error: getting transaction from context")
+)
+
 type ItemImageRepository struct {
 	db     *sql.DB
 	logger *slog.Logger
@@ -34,17 +43,19 @@ func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate
 	}
 	defer tx.Rollback()
 
-	itemId, err := i.createItem(ctx, tx, item)
+	ctx = context.WithValue(ctx, ctxTxKey, tx)
+
+	itemId, err := i.createItem(ctx, item)
 	if err != nil {
 		return err
 	}
 
-	err = i.createImage(ctx, tx, itemId, item.Images)
+	err = i.createImage(ctx, itemId, item.Images)
 	if err != nil {
 		return err
 	}
 
-	err = i.deleteFromTempImageTable(ctx, tx, item.Images)
+	err = i.deleteFromTempImageTable(ctx, item.Images)
 	if err != nil {
 		return err
 	}
@@ -58,8 +69,24 @@ func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate
 	return nil
 }
 
-func (i *ItemImageRepository) createItem(ctx context.Context, tx *sql.Tx, item domain.ItemCreate) (uint, error) {
+func (i *ItemImageRepository) txFromCtx(ctx context.Context) (*sql.Tx, bool) {
+	tx, ok := ctx.Value(ctxTxKey).(*sql.Tx)
+	if !ok {
+		return nil, false
+	}
+
+	return tx, true
+}
+
+func (i *ItemImageRepository) createItem(ctx context.Context, item domain.ItemCreate) (uint, error) {
 	const op = "repository.item_image.createItem"
+
+	tx, ok := i.txFromCtx(ctx)
+	if !ok {
+		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
+
+		return 0, errGetTransaction
+	}
 
 	psql := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("items").
@@ -73,8 +100,6 @@ func (i *ItemImageRepository) createItem(ctx context.Context, tx *sql.Tx, item d
 
 		return 0, err
 	}
-
-	// fmt.Println(sql, args)
 
 	var itemId uint
 	err = tx.QueryRow(sql, args...).Scan(&itemId)
@@ -93,8 +118,15 @@ type Image struct {
 	UploadAt time.Time
 }
 
-func (i *ItemImageRepository) createImage(ctx context.Context, tx *sql.Tx, itemId uint, images []string) error {
+func (i *ItemImageRepository) createImage(ctx context.Context, itemId uint, images []string) error {
 	const op = "repository.item_image.createImage"
+
+	tx, ok := i.txFromCtx(ctx)
+	if !ok {
+		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
+
+		return errGetTransaction
+	}
 
 	sql, _, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("images").
@@ -116,8 +148,6 @@ func (i *ItemImageRepository) createImage(ctx context.Context, tx *sql.Tx, itemI
 		})
 	}
 
-	// fmt.Println(sql)
-
 	stmt, err := tx.Prepare(sql)
 	if err != nil {
 		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
@@ -138,8 +168,15 @@ func (i *ItemImageRepository) createImage(ctx context.Context, tx *sql.Tx, itemI
 	return nil
 }
 
-func (i *ItemImageRepository) deleteFromTempImageTable(ctx context.Context, tx *sql.Tx, imageIds []string) error {
+func (i *ItemImageRepository) deleteFromTempImageTable(ctx context.Context, imageIds []string) error {
 	const op = "repository.item_image.deleteFromTempImageTable"
+
+	tx, ok := i.txFromCtx(ctx)
+	if !ok {
+		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
+
+		return errGetTransaction
+	}
 
 	sql, _, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Delete("").

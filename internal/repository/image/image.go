@@ -206,13 +206,6 @@ func (i *ImageRepository) InsertTempImage(ctx context.Context, objectId string) 
 func (i *ImageRepository) DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error {
 	const op = "repository.image.DeleteTempImage"
 
-	if err := postgresql.AdvisoryLock(i.db, postgresql.TempImageAdvisoryLockId); err != nil {
-		i.logger.Error(fmt.Sprintf("%s : %s", op, "failed get advisory_lock"), sl.Err(err))
-
-		return err
-	}
-	defer postgresql.AdvisoryUnlock(i.db, postgresql.TempImageAdvisoryLockId)
-
 	images, err := i.getTempImages(ctx)
 	if err != nil {
 		return err

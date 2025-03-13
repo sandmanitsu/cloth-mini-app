@@ -10,10 +10,12 @@ import (
 	imageRepo "cloth-mini-app/internal/repository/image"
 	itemRepo "cloth-mini-app/internal/repository/item"
 	itemImageRepo "cloth-mini-app/internal/repository/item_image"
+	lockRepo "cloth-mini-app/internal/repository/lock"
 	"cloth-mini-app/internal/service/brand"
 	"cloth-mini-app/internal/service/category"
 	"cloth-mini-app/internal/service/image"
 	"cloth-mini-app/internal/service/item"
+	"cloth-mini-app/internal/service/lock"
 	"cloth-mini-app/internal/storage/minio"
 	"cloth-mini-app/internal/storage/postgresql"
 	"log/slog"
@@ -45,15 +47,17 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	brandRepo := brandRepo.NewBrandRepository(logger, storage)
 	imageRepo := imageRepo.NewImageRepository(logger, storage)
 	itemImageRepo := itemImageRepo.NewItemImageRepository(logger, storage)
+	lockRepo := lockRepo.NewLockRepository(storage)
 
 	// prepare services
+	lockService := lock.NewLockService(lockRepo)
 	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo)
 	categoryService := category.NewCategoryService(logger, categoryRepo)
 	brandService := brand.NewBrandService(logger, brandRepo)
 	imageService := image.NewImageService(logger, minioClient, imageRepo)
 
 	// backgrounds tasks
-	backgroundTask := background.NewBackgroundTask(logger, minioClient, imageRepo)
+	backgroundTask := background.NewBackgroundTask(logger, minioClient, imageRepo, lockService)
 	backgroundTask.TempImage.StartDeleteTempImage()
 
 	e := echo.New()

@@ -1,7 +1,8 @@
 package background
 
 import (
-	domain "cloth-mini-app/internal/domain/image"
+	idomain "cloth-mini-app/internal/domain/image"
+	ldomain "cloth-mini-app/internal/domain/lock"
 	sl "cloth-mini-app/internal/logger"
 	"cloth-mini-app/internal/storage/minio"
 	"context"
@@ -22,20 +23,27 @@ var (
 
 type ImageRepository interface {
 	// Delete temp images data into db
-	DeleteTempImage(ctx context.Context, deleteFn func([]domain.TempImage) ([]domain.TempImage, error)) error
+	DeleteTempImage(ctx context.Context, deleteFn func([]idomain.TempImage) ([]idomain.TempImage, error)) error
+}
+
+type LockService interface {
+	AdvisoryLock(ctx context.Context, id ldomain.AdvisoryLockId) error
+	AdvisoryUnlock(ctx context.Context, id ldomain.AdvisoryLockId) error
 }
 
 type ImageBackground struct {
 	logger    *slog.Logger
 	minioCl   *minio.MinioClient
 	imageRepo ImageRepository
+	lockSrv   LockService
 }
 
-func NewImageBackground(logger *slog.Logger, mc *minio.MinioClient, imr ImageRepository) *ImageBackground {
+func NewImageBackground(logger *slog.Logger, mc *minio.MinioClient, imr ImageRepository, lsrv LockService) *ImageBackground {
 	return &ImageBackground{
 		logger:    logger,
 		minioCl:   mc,
 		imageRepo: imr,
+		lockSrv:   lsrv,
 	}
 }
 
@@ -51,12 +59,16 @@ func (i *ImageBackground) StartDeleteTempImage() {
 			case <-ticker.C:
 				ctx := context.Background()
 
-				err := i.imageRepo.DeleteTempImage(ctx, func(images []domain.TempImage) ([]domain.TempImage, error) {
+				if err := i.lockSrv.AdvisoryLock(ctx, ldomain.TempImageAdvisoryLockId); err != nil {
+					i.logger.Error(fmt.Sprintf("%s : failed get advisory lock", op), sl.Err(err))
+				}
+
+				err := i.imageRepo.DeleteTempImage(ctx, func(images []idomain.TempImage) ([]idomain.TempImage, error) {
 					if len(images) == 0 {
 						return nil, errNoImageToDelete
 					}
 
-					deletingImage := make([]domain.TempImage, 0, len(images))
+					deletingImage := make([]idomain.TempImage, 0, len(images))
 
 					for _, image := range images {
 						curr := time.Now()
@@ -76,6 +88,10 @@ func (i *ImageBackground) StartDeleteTempImage() {
 
 				if err != nil && !errors.Is(err, errNoImageToDelete) {
 					i.logger.Debug(op, sl.Err(err))
+				}
+
+				if err = i.lockSrv.AdvisoryUnlock(ctx, ldomain.TempImageAdvisoryLockId); err != nil {
+					i.logger.Error(fmt.Sprintf("%s : failed advisory unlock", op), sl.Err(err))
 				}
 			}
 		}

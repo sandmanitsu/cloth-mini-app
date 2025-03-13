@@ -8,11 +8,7 @@ import (
 	"github.com/lib/pq"
 )
 
-type AdvisoryLockId int
-
 const (
-	TempImageAdvisoryLockId AdvisoryLockId = 01
-
 	duplicateKeyCode = "23505"
 )
 
@@ -43,24 +39,6 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 	}
 
 	return &Storage{DB: db}, nil
-}
-
-func AdvisoryLock(db *sql.DB, id AdvisoryLockId) error {
-	_, err := db.Exec("SELECT pg_advisory_lock($1)", id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func AdvisoryUnlock(db *sql.DB, id AdvisoryLockId) error {
-	_, err := db.Exec("SELECT pg_advisory_unlock($1)", id)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func IsDuplicateKeyError(err error) bool {

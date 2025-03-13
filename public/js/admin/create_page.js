@@ -47,7 +47,7 @@ async function create() {
         });
 
         if (response.ok) {
-            // window.location.replace('/admin/')
+            window.location.replace('/admin/')
         } else {
             alert("Не удалось создать товар.");
             throw new Error(`Ошибка HTTP: ${response.status}`);
