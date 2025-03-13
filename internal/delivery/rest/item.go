@@ -184,6 +184,7 @@ func (i *ItemHandler) Create(c echo.Context) error {
 		Price:       item.Price,
 		Discount:    item.Discount,
 		OuterLink:   item.OuterLink,
+		Images:      item.Images,
 	})
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "failed creating item"})

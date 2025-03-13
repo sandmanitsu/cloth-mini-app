@@ -3,6 +3,7 @@ package rest
 import (
 	"cloth-mini-app/internal/dto"
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strconv"
@@ -12,6 +13,13 @@ import (
 	"github.com/labstack/echo/v4/middleware"
 )
 
+var (
+	errGetFile   = fmt.Errorf("failed get file")
+	errOpenFile  = fmt.Errorf("failed open file")
+	errReadFile  = fmt.Errorf("failed read file")
+	errImageType = fmt.Errorf("incorrect image format. allowed image formats: .jpg/.png")
+)
+
 type ImageService interface {
 	// Store image
 	CreateItemImage(ctx context.Context, itemId int, file []byte) (string, error)
@@ -19,6 +27,8 @@ type ImageService interface {
 	GetImage(ctx context.Context, imageId string) (dto.FileDTO, error)
 	// Delete image from db and storage
 	Delete(ctx context.Context, imageId string) error
+	// Create temp image
+	CreateTempImage(ctx context.Context, file []byte, uuid string) (string, error)
 }
 
 type ImageHandler struct {
@@ -34,6 +44,7 @@ func NewImageHandler(e *echo.Echo, srv ImageService) {
 	g.Use(middleware.Logger())
 
 	g.POST("/create", handler.CreateItemImage)
+	g.POST("/temp", handler.CreateTempImage)
 	g.GET("/get/:image_id", handler.Image)
 	g.DELETE("/delete", handler.Delete)
 }
@@ -56,32 +67,10 @@ func (i *ImageHandler) CreateItemImage(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{Err: "itemId is incorrect or not provided"})
 	}
 
-	file, err := c.FormFile("image")
+	imageBytes, err := i.file(c)
 	if err != nil {
 		return c.JSON(http.StatusBadRequest, ErrorResponse{
 			Err: "failed get file",
-		})
-	}
-
-	image, err := file.Open()
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "failed open file",
-		})
-	}
-	defer image.Close()
-
-	imageBytes, err := io.ReadAll(image)
-	if err != nil {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "failed read file",
-		})
-	}
-
-	mtype := mimetype.Detect(imageBytes)
-	if !(mtype.Is("image/jpeg") || mtype.Is("image/png")) {
-		return c.JSON(http.StatusBadRequest, ErrorResponse{
-			Err: "incorrect image format. allowed image formats: .jpg/.png",
 		})
 	}
 
@@ -147,4 +136,54 @@ func (i *ImageHandler) Delete(c echo.Context) error {
 		Status:    true,
 		Operation: "delete",
 	})
+}
+
+type UUID struct {
+	Uuid string `param:"uuid"`
+}
+
+func (i *ImageHandler) CreateTempImage(c echo.Context) error {
+	imageBytes, err := i.file(c)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Err: err.Error(),
+		})
+	}
+
+	fileId, err := i.Service.CreateTempImage(c.Request().Context(), imageBytes, c.FormValue("uuid"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, ErrorResponse{
+			Err: "failet store image. Maybe reached max image per item",
+		})
+	}
+
+	return c.JSON(http.StatusOK, CreateImageResponse{
+		FileId: fileId,
+	})
+}
+
+// read image file
+func (i *ImageHandler) file(c echo.Context) ([]byte, error) {
+	file, err := c.FormFile("image")
+	if err != nil {
+		return nil, errGetFile
+	}
+
+	image, err := file.Open()
+	if err != nil {
+		return nil, errOpenFile
+	}
+	defer image.Close()
+
+	imageBytes, err := io.ReadAll(image)
+	if err != nil {
+		return nil, errReadFile
+	}
+
+	mtype := mimetype.Detect(imageBytes)
+	if !(mtype.Is("image/jpeg") || mtype.Is("image/png")) {
+		return nil, errImageType
+	}
+
+	return imageBytes, nil
 }
