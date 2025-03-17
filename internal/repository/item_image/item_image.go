@@ -39,7 +39,7 @@ func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate
 
 	tx, err := i.db.BeginTx(ctx, nil)
 	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, "failet start transaction"), sl.Err(err))
+		i.logger.Error(fmt.Sprintf("%s: %s", op, "failed start transaction"), sl.Err(err))
 	}
 	defer tx.Rollback()
 
