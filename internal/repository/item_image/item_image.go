@@ -13,12 +13,7 @@ import (
 	"github.com/Masterminds/squirrel"
 )
 
-type txKey string
-
 var (
-	// tx key in context
-	ctxTxKey = txKey("tx")
-
 	errGetTransaction = fmt.Errorf("error: getting transaction from context")
 )
 
@@ -37,31 +32,27 @@ func NewItemImageRepository(logger *slog.Logger, db *postgresql.Storage) *ItemIm
 func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate) error {
 	const op = "repository.item_image.Create"
 
-	tx, err := i.db.BeginTx(ctx, nil)
-	if err != nil {
-		i.logger.Error(fmt.Sprintf("%s: %s", op, "failed start transaction"), sl.Err(err))
-	}
-	defer tx.Rollback()
+	err := postgresql.WrapTx(ctx, i.db, func(ctx context.Context) error {
+		itemId, err := i.createItem(ctx, item)
+		if err != nil {
+			return err
+		}
 
-	ctx = context.WithValue(ctx, ctxTxKey, tx)
+		err = i.createImage(ctx, itemId, item.Images)
+		if err != nil {
+			return err
+		}
 
-	itemId, err := i.createItem(ctx, item)
-	if err != nil {
+		err = i.deleteFromTempImageTable(ctx, item.Images)
+		if err != nil {
+			return err
+		}
+
 		return err
-	}
+	})
 
-	err = i.createImage(ctx, itemId, item.Images)
 	if err != nil {
-		return err
-	}
-
-	err = i.deleteFromTempImageTable(ctx, item.Images)
-	if err != nil {
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		i.logger.Error(fmt.Sprintf("%s : failed commit transaction", op), sl.Err(err))
+		i.logger.Error(op, sl.Err(err))
 
 		return err
 	}
@@ -69,19 +60,10 @@ func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate
 	return nil
 }
 
-func (i *ItemImageRepository) txFromCtx(ctx context.Context) (*sql.Tx, bool) {
-	tx, ok := ctx.Value(ctxTxKey).(*sql.Tx)
-	if !ok {
-		return nil, false
-	}
-
-	return tx, true
-}
-
 func (i *ItemImageRepository) createItem(ctx context.Context, item domain.ItemCreate) (uint, error) {
 	const op = "repository.item_image.createItem"
 
-	tx, ok := i.txFromCtx(ctx)
+	tx, ok := postgresql.TxFromCtx(ctx)
 	if !ok {
 		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
 
@@ -121,7 +103,7 @@ type Image struct {
 func (i *ItemImageRepository) createImage(ctx context.Context, itemId uint, images []string) error {
 	const op = "repository.item_image.createImage"
 
-	tx, ok := i.txFromCtx(ctx)
+	tx, ok := postgresql.TxFromCtx(ctx)
 	if !ok {
 		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
 
@@ -171,7 +153,7 @@ func (i *ItemImageRepository) createImage(ctx context.Context, itemId uint, imag
 func (i *ItemImageRepository) deleteFromTempImageTable(ctx context.Context, imageIds []string) error {
 	const op = "repository.item_image.deleteFromTempImageTable"
 
-	tx, ok := i.txFromCtx(ctx)
+	tx, ok := postgresql.TxFromCtx(ctx)
 	if !ok {
 		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
 
