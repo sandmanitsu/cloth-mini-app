@@ -5,7 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 
-	_ "github.com/lib/pq"
+	"github.com/lib/pq"
+)
+
+const (
+	duplicateKeyCode = "23505"
 )
 
 type Storage struct {
@@ -35,4 +39,12 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 	}
 
 	return &Storage{DB: db}, nil
+}
+
+func IsDuplicateKeyError(err error) bool {
+	if pqErr, ok := err.(*pq.Error); ok {
+		return pqErr.Code == duplicateKeyCode
+	}
+
+	return false
 }
