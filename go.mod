@@ -11,10 +11,12 @@ require (
 	github.com/labstack/echo/v4 v4.13.3
 	github.com/lib/pq v1.10.9
 	github.com/minio/minio-go/v7 v7.0.87
+	github.com/stretchr/testify v1.10.0
 )
 
 require (
 	github.com/BurntSushi/toml v1.4.0 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
@@ -32,6 +34,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/minio/crc64nvme v1.0.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rs/xid v1.6.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
