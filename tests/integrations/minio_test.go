@@ -13,12 +13,6 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-// type MinioClient interface {
-// 	Put(ctx context.Context, file dto.FileDTO) error
-// 	Get(ctx context.Context, objectId string) (dto.FileDTO, error)
-// 	GetMany(ctx context.Context, objectIds []string) ([]dto.FileDTO, error)
-// }
-
 type MinioSuite struct {
 	suite.Suite
 	cl *minio.MinioClient
