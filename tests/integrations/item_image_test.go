@@ -1,5 +1,3 @@
-//go:build integrations
-
 package integrations
 
 import (
@@ -65,6 +63,33 @@ func (i *ItemImageIntegrationSuite) SetupTest() {
 	storage := &postgresql.Storage{DB: i.db}
 
 	i.repo = itemImageRepo.NewItemImageRepository(i.logger, storage)
+}
+
+func (i *ItemImageIntegrationSuite) TestCreateItemWithoutImages() {
+	ctx := context.Background()
+
+	item := domain.ItemCreate{
+		BrandId:     1,
+		Name:        "create test item",
+		Description: "some description...",
+		Sex:         1,
+		CategoryId:  1,
+		Price:       10000,
+		Discount:    10,
+		OuterLink:   "http:/localhost:8080/",
+		Images:      nil,
+	}
+
+	err := i.repo.Create(ctx, item)
+	i.Require().NoError(err)
+
+	dbItem := i.getCreatedItem(item.Name)
+
+	i.Require().Equal(item.Name, dbItem.Name)
+	i.Require().Equal(item.Description, dbItem.Description)
+	i.Require().Equal(item.Price, dbItem.Price)
+	i.Require().Equal(item.BrandId, dbItem.BrandId)
+	i.Require().Equal(item.CategoryId, dbItem.CategoryId)
 }
 
 func (i *ItemImageIntegrationSuite) TestCreate() {
@@ -165,6 +190,6 @@ func (i *ItemImageIntegrationSuite) TearDownTest() {
 	_, _ = i.db.Exec("TRUNCATE TABLE temp_images, images, items")
 }
 
-func TestRepoSuite(t *testing.T) {
+func TestItemImageRepoSuite(t *testing.T) {
 	suite.Run(t, NewItemImageSuite())
 }

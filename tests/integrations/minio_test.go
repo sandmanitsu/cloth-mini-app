@@ -1,5 +1,3 @@
-//go:build integrations
-
 package integrations
 
 import (
