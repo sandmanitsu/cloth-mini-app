@@ -1,0 +1,2 @@
+migrations/*
+!20250219121102_add_items.sql

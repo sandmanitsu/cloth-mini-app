@@ -38,11 +38,11 @@ var (
 )
 
 // Getting config variables from .env file
-func MustLoad() *Config {
+func MustLoad(path string) *Config {
 	if config == nil {
 		once.Do(
 			func() {
-				configPath := filepath.Join(".env")
+				configPath := filepath.Join(path)
 
 				if _, err := os.Stat(configPath); err != nil {
 					log.Fatalf("Error opening config file: %s", err)
