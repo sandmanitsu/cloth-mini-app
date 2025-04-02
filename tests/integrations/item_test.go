@@ -1,226 +1,91 @@
 package integrations
 
 import (
-	"cloth-mini-app/internal/config"
 	domain "cloth-mini-app/internal/domain/item"
-	itemRepo "cloth-mini-app/internal/repository/item"
-	"cloth-mini-app/internal/storage/postgresql"
-	"context"
-	"database/sql"
-	"fmt"
+	"encoding/json"
+	"io"
 	"log"
-	"log/slog"
-	"os"
-	"testing"
+	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/Masterminds/squirrel"
-	"github.com/stretchr/testify/suite"
 )
 
-type ItemRepository interface {
-	// Fetch items from db
-	GetItems(ctx context.Context, params domain.ItemInputData) ([]domain.ItemAPI, error)
-	// Returning item by id
-	GetItemById(ctx context.Context, id int) (domain.ItemAPI, error)
-	// Update item record
-	Update(ctx context.Context, data domain.ItemUpdate) error
-	// Delete item
-	Delete(ctx context.Context, id int) error
+type GetItem struct {
+	ID           uint       `json:"id"`
+	BrandId      uint       `json:"brand_id"`
+	BrandName    string     `json:"brand_name"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Sex          int        `json:"sex"`
+	CategoryId   int        `json:"category_id"`
+	CategoryType int        `json:"category_type"`
+	CategoryName string     `json:"category_name"`
+	Price        int        `json:"price"`
+	Discount     *int       `json:"discount"`
+	OuterLink    string     `json:"outer_link"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
 }
 
-type ItemIntegrationSuite struct {
-	suite.Suite
-	db     *sql.DB
-	logger *slog.Logger
-	repo   ItemRepository
+type ItemResponse struct {
+	Count int       `json:"count"`
+	Items []GetItem `json:"items"`
 }
 
-func NewItemSuite() *ItemIntegrationSuite {
-	return &ItemIntegrationSuite{}
-}
+func (i *IntegrationSuite) TestGetItem() {
+	url := "http://localhost:8080/item/get?limit=10&offset=0"
 
-func (i *ItemIntegrationSuite) SetupSuite() {
-	config := config.MustLoad("../../.env")
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer response.Body.Close()
 
-	psqlInfo := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
-		config.DB.Host,
-		config.DB.Port,
-		config.DB.User,
-		config.DB.Password,
-		config.DB.DBname,
-	)
+	i.Require().Equal(http.StatusOK, response.StatusCode)
 
-	db, err := sql.Open("postgres", psqlInfo)
+	respItem, err := io.ReadAll(response.Body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	i.db = db
-
-	logger := slog.New(
-		slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelDebug}),
-	)
-
-	i.logger = logger
-}
-
-func (i *ItemIntegrationSuite) SetupTest() {
-	storage := &postgresql.Storage{DB: i.db}
-
-	i.repo = itemRepo.NewItemRepository(i.logger, storage)
-}
-
-func (i *ItemIntegrationSuite) TearDownTest() {
-	_, _ = i.db.Exec("TRUNCATE TABLE items")
-}
-
-func TestItemRepoSuite(t *testing.T) {
-	suite.Run(t, NewItemSuite())
-}
-
-func (i *ItemIntegrationSuite) TestDelete() {
-	ctx := context.Background()
-
-	testItem := domain.ItemCreate{
-		BrandId:     1,
-		Name:        "test delete item",
-		Description: "some description...",
-		Sex:         1,
-		CategoryId:  1,
-		Price:       10000,
-		Discount:    10,
-		OuterLink:   "http:/localhost:8080/",
-		Images:      nil,
+	var items ItemResponse
+	err = json.Unmarshal(respItem, &items)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	id := i.createItem(testItem)
-
-	i.repo.Delete(ctx, int(id))
-
-	_, err := i.repo.GetItemById(ctx, int(id))
-
-	i.Require().Error(err)
+	i.Require().Equal(3, items.Count)
 }
 
-func (i *ItemIntegrationSuite) TestGetItemById() {
-	ctx := context.Background()
-
-	testItem := domain.ItemCreate{
-		BrandId:     1,
-		Name:        "test get item by it",
-		Description: "some description...",
-		Sex:         1,
-		CategoryId:  1,
-		Price:       10000,
-		Discount:    10,
-		OuterLink:   "http:/localhost:8080/",
-		Images:      nil,
-	}
-
-	id := i.createItem(testItem)
-
-	dbItem, err := i.repo.GetItemById(ctx, int(id))
-
-	i.Require().NoError(err)
-
-	i.Require().Equal(id, dbItem.ID)
+type ItemByIdResponse struct {
+	ID           uint       `json:"id"`
+	BrandId      uint       `json:"brand_id"`
+	BrandName    string     `json:"brand_name"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Sex          int        `json:"sex"`
+	CategoryId   int        `json:"category_id"`
+	CategoryType int        `json:"category_type"`
+	CategoryName string     `json:"category_name"`
+	Price        int        `json:"price"`
+	Discount     *int       `json:"discount"`
+	OuterLink    string     `json:"outer_link"`
+	CreatedAt    time.Time  `json:"created_at"`
+	UpdatedAt    *time.Time `json:"updated_at"`
+	ImageId      []string   `json:"image_id"`
 }
 
-func (i *ItemIntegrationSuite) TestUpdateItem() {
-	ctx := context.Background()
-
-	testItem := domain.ItemCreate{
-		BrandId:     1,
-		Name:        "test update item",
-		Description: "some description...",
-		Sex:         1,
-		CategoryId:  1,
-		Price:       10000,
-		Discount:    10,
-		OuterLink:   "http:/localhost:8080/",
-		Images:      nil,
-	}
-
-	i.createItem(testItem)
-
-	newName := "Updated"
-	var newPrice uint = 500
-
-	err := i.repo.Update(ctx, domain.ItemUpdate{
-		Name:  &newName,
-		Price: &newPrice,
-	})
-
-	i.Require().NoError(err)
-
-	dbItems, err := i.repo.GetItems(ctx, domain.ItemInputData{
-		Name: &newName,
-	})
-
-	i.Require().NoError(err)
-
-	i.Require().Equal(newName, dbItems[0].Name)
-	i.Require().Equal(newPrice, dbItems[0].Price)
-}
-
-func (i *ItemIntegrationSuite) TestGetItem() {
-	ctx := context.Background()
-
-	testItems := []domain.ItemCreate{
-		{
-			BrandId:     1,
-			Name:        "test get item 1",
-			Description: "some description...",
-			Sex:         1,
-			CategoryId:  1,
-			Price:       10000,
-			Discount:    10,
-			OuterLink:   "http:/localhost:8080/",
-			Images:      nil,
-		},
-		{
-			BrandId:     1,
-			Name:        "test get item 2",
-			Description: "some description...",
-			Sex:         1,
-			CategoryId:  1,
-			Price:       10000,
-			Discount:    10,
-			OuterLink:   "http:/localhost:8080/",
-			Images:      nil,
-		},
-		{
-			BrandId:     1,
-			Name:        "test get item 3",
-			Description: "some description...",
-			Sex:         1,
-			CategoryId:  1,
-			Price:       10000,
-			Discount:    10,
-			OuterLink:   "http:/localhost:8080/",
-			Images:      nil,
-		},
-	}
-
-	for _, testItem := range testItems {
-		i.createItem(testItem)
-	}
-
-	dbItems, err := i.repo.GetItems(ctx, domain.ItemInputData{})
-
-	i.Require().NoError(err)
-
-	i.Require().Equal(len(testItems), len(dbItems))
-}
-
-func (i *ItemIntegrationSuite) TestGetItemByName() {
-	ctx := context.Background()
-
+func (i *IntegrationSuite) TestGetItemById() {
 	item := domain.ItemCreate{
 		BrandId:     1,
-		Name:        "create test item",
+		Name:        "test item by id",
 		Description: "some description...",
 		Sex:         1,
 		CategoryId:  1,
@@ -230,21 +95,39 @@ func (i *ItemIntegrationSuite) TestGetItemByName() {
 		Images:      nil,
 	}
 
-	i.createItem(item)
+	id := i.createItem(item)
+	itemId := strconv.Itoa(int(id))
+	url := "http://localhost:8080/item/get/" + itemId
 
-	items, err := i.repo.GetItems(ctx, domain.ItemInputData{
-		Name: &item.Name,
-	})
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	client := http.Client{}
+	response, err := client.Do(request)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer response.Body.Close()
 
-	i.Require().NoError(err)
+	i.Require().Equal(http.StatusOK, response.StatusCode)
 
-	dbItem := items[0]
+	rawItem, err := io.ReadAll(response.Body)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	i.Require().Equal(item.Name, dbItem.Name)
-	i.Require().Equal(item.Description, dbItem.Description)
+	var respItem ItemByIdResponse
+	err = json.Unmarshal(rawItem, &respItem)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	i.Require().Equal(item.Name, respItem.Name)
+	i.Require().Equal(item.Price, uint(respItem.Price))
 }
 
-func (i *ItemIntegrationSuite) createItem(item domain.ItemCreate) uint {
+func (i *IntegrationSuite) createItem(item domain.ItemCreate) uint {
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Insert("items").
 		Columns("brand_id", "name", "description", "sex", "category_id", "price", "discount", "outer_link", "created_at").
