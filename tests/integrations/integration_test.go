@@ -42,7 +42,7 @@ func (i *IntegrationSuite) SetupSuite() {
 func (i *IntegrationSuite) SetupTest() {
 	log.Print("migration up")
 
-	err := goose.Up(i.db, "../../migrations")
+	err := goose.Up(i.db, "./migrations")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func (i *IntegrationSuite) SetupTest() {
 func (i *IntegrationSuite) TearDownTest() {
 	log.Print("migration down")
 
-	err := goose.Down(i.db, "../../migrations")
+	err := goose.Down(i.db, "./migrations")
 	if err != nil {
 		log.Fatal(err)
 	}
