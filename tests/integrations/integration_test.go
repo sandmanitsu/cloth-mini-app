@@ -33,7 +33,7 @@ func NewIntegrationSuite() *IntegrationSuite {
 }
 
 func (i *IntegrationSuite) SetupSuite() {
-	i.config = config.MustLoad("../../.env")
+	i.config = config.MustLoad()
 
 	i.getDB()
 	i.getMinioClient()

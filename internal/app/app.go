@@ -58,7 +58,8 @@ func Run(config *congig.Config, logger *slog.Logger) {
 
 	// backgrounds tasks
 	backgroundTask := background.NewBackgroundTask(logger, minioClient, imageRepo, lockService)
-	backgroundTask.TempImage.StartDeleteTempImage()
+	_ = backgroundTask
+	// backgroundTask.TempImage.StartDeleteTempImage()
 
 	e := echo.New()
 	e.Static("/admin/static", "public")

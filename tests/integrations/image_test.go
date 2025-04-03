@@ -156,8 +156,6 @@ func (i *IntegrationSuite) TestCreateImage() {
 }
 
 func (i *IntegrationSuite) getImage(itemId int) (string, error) {
-	const op = "image_test.getTempImage"
-
 	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
 		Select("object_id").
 		From("images").

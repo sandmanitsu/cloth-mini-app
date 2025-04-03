@@ -10,7 +10,7 @@ import (
 
 func main() {
 	log.Println("config initializing...")
-	config := config.MustLoad(".env")
+	config := config.MustLoad()
 
 	log.Println("logger initializing...")
 	logger := logger.NewLogger(config.Env)
