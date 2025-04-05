@@ -28,7 +28,7 @@ type ItemCreate struct {
 }
 
 func (i *IntegrationSuite) TestCreateTempImage() {
-	url := "http://localhost:8080/image/temp"
+	url := host + "/image/temp"
 
 	image, err := os.Open("fixtures/test_pic.jpg")
 	if err != nil {
@@ -102,7 +102,7 @@ func (i *IntegrationSuite) getTempImage(id string) string {
 }
 
 func (i *IntegrationSuite) TestCreateImage() {
-	url := "http://localhost:8080/image/create?itemId=1"
+	url := host + "/image/create?itemId=1"
 
 	image, err := os.Open("fixtures/test_pic.jpg")
 	if err != nil {
@@ -176,7 +176,7 @@ func (i *IntegrationSuite) getImage(itemId int) (string, error) {
 
 func (i *IntegrationSuite) TestGetImage() {
 	imageId := uuid.NewString()
-	url := "http://localhost:8080/image/get/" + imageId
+	url := host + "/image/get/" + imageId
 
 	image, err := os.ReadFile("fixtures/test_pic.jpg")
 	if err != nil {
@@ -208,7 +208,7 @@ func (i *IntegrationSuite) TestGetImage() {
 
 func (i *IntegrationSuite) TestDeleteImage() {
 	imageId := uuid.NewString()
-	url := "http://localhost:8080/image/delete?image_id=" + imageId
+	url := host + "/image/delete?image_id=" + imageId
 
 	image, err := os.ReadFile("fixtures/test_pic.jpg")
 	if err != nil {
@@ -252,7 +252,7 @@ func (i *IntegrationSuite) createImageDB(itemId int, objectId string) {
 }
 
 func (i *IntegrationSuite) TestMaxImagePerItem() {
-	url := "http://localhost:8080/image/create?itemId=1"
+	url := host + "/image/create?itemId=1"
 
 	maxImagesPerItem := 4
 	for range maxImagesPerItem {

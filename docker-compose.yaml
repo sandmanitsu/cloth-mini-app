@@ -1,7 +1,6 @@
 services:
   postgres:
     image: postgres:latest
-    container_name: cloth-mini-app
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin

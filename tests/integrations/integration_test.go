@@ -19,6 +19,12 @@ import (
 
 const (
 	mockItemID = 1 //
+
+	// host = "http://app:8080"
+)
+
+var (
+	host string
 )
 
 type IntegrationSuite struct {
@@ -34,6 +40,8 @@ func NewIntegrationSuite() *IntegrationSuite {
 
 func (i *IntegrationSuite) SetupSuite() {
 	i.config = config.MustLoad()
+
+	host = "http://" + i.config.Host + ":" + i.config.Port
 
 	i.getDB()
 	i.getMinioClient()

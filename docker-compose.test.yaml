@@ -1,7 +1,23 @@
 services:
+  app:
+    build:
+      context: .
+      dockerfile: dockerfile
+    depends_on:
+      minio:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+  test:
+    build:
+      context: .
+      dockerfile: dockerfile.test
+    depends_on:
+    - app
   postgres:
     image: postgres:latest
-    container_name: cloth-mini-app
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
@@ -20,7 +36,7 @@ services:
               -c wal_buffers=16MB
               -c default_statistics_target=100
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres_user -d postgres_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d storage" ]
       interval: 30s
       timeout: 10s
       retries: 5
@@ -43,15 +59,6 @@ services:
       interval: 30s
       timeout: 20s
       retries: 3
-  test:
-    build:
-      context: .
-      dockerfile: dockerfile.test
-    depends_on:
-      minio:
-        condition: service_healthy
-      postgres:
-        condition: service_healthy
 
 volumes:
   # pgdata:

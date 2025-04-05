@@ -37,7 +37,7 @@ type ItemResponse struct {
 }
 
 func (i *IntegrationSuite) TestGetItem() {
-	url := "http://localhost:8080/item/get?limit=10&offset=0"
+	url := host + "/item/get?limit=10&offset=0"
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -99,7 +99,7 @@ func (i *IntegrationSuite) TestGetItemById() {
 
 	id := i.createItem(item)
 	itemId := strconv.Itoa(int(id))
-	url := "http://localhost:8080/item/get/" + itemId
+	url := host + "/item/get/" + itemId
 
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -169,7 +169,7 @@ func (i *IntegrationSuite) TestUpdateItem() {
 
 	id := i.createItem(item)
 	itemId := strconv.Itoa(int(id))
-	url := "http://localhost:8080/item/update/" + itemId
+	url := host + "/item/update/" + itemId
 
 	updateField := ItemUpdateField{
 		Name:  "updated",
@@ -235,7 +235,7 @@ func (i *IntegrationSuite) getItem(itemId uint) (domain.ItemCreate, error) {
 }
 
 func (i *IntegrationSuite) TestCreateItem() {
-	url := "http://localhost:8080/item/create"
+	url := host + "/item/create"
 
 	item := ItemCreate{
 		BrandId:     1,
@@ -361,7 +361,7 @@ func (i *IntegrationSuite) TestDeleteItem() {
 
 	id := i.createItem(item)
 	itemId := strconv.Itoa(int(id))
-	url := "http://localhost:8080/item/delete/" + itemId
+	url := host + "/item/delete/" + itemId
 
 	request, err := http.NewRequest("DELETE", url, nil)
 	if err != nil {
