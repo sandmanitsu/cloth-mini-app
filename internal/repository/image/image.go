@@ -105,11 +105,6 @@ func (i *ImageRepository) getImagesForUpdate(itemId int) (int, error) {
 
 	var imageCnt int
 	for rows.Next() {
-		if err := rows.Scan(); err != nil {
-			i.logger.Error(op, sl.Err(err))
-
-			return 0, err
-		}
 		imageCnt++
 	}
 
