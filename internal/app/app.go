@@ -11,6 +11,7 @@ import (
 	itemRepo "cloth-mini-app/internal/repository/item"
 	itemImageRepo "cloth-mini-app/internal/repository/item_image"
 	lockRepo "cloth-mini-app/internal/repository/lock"
+	outboxRepo "cloth-mini-app/internal/repository/outbox"
 	"cloth-mini-app/internal/service/brand"
 	"cloth-mini-app/internal/service/category"
 	"cloth-mini-app/internal/service/image"
@@ -48,10 +49,11 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	imageRepo := imageRepo.NewImageRepository(logger, storage)
 	itemImageRepo := itemImageRepo.NewItemImageRepository(logger, storage)
 	lockRepo := lockRepo.NewLockRepository(storage)
+	outboxRepo := outboxRepo.NewOutboxRepository(logger, storage)
 
 	// prepare services
 	lockService := lock.NewLockService(lockRepo)
-	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo)
+	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo, outboxRepo)
 	categoryService := category.NewCategoryService(logger, categoryRepo)
 	brandService := brand.NewBrandService(logger, brandRepo)
 	imageService := image.NewImageService(logger, minioClient, imageRepo)

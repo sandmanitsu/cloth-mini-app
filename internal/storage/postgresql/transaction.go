@@ -9,6 +9,8 @@ import (
 type txKey string
 
 var (
+	ErrGetTransaction = fmt.Errorf("error: getting transaction from context")
+
 	// tx key in context
 	ctxTxKey = txKey("tx")
 )

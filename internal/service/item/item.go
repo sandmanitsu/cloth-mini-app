@@ -1,6 +1,7 @@
 package item
 
 import (
+	domainEvent "cloth-mini-app/internal/domain/event"
 	domain "cloth-mini-app/internal/domain/item"
 	sl "cloth-mini-app/internal/logger"
 	"context"
@@ -29,20 +30,26 @@ type ItemImageRepository interface {
 	Create(ctx context.Context, item domain.ItemCreate) error
 }
 
+type OutboxRepository interface {
+	SaveEvent(ctx context.Context, event domainEvent.Event, action func() error) error
+}
+
 type ItemService struct {
 	logger        *slog.Logger
 	itemRepo      ItemRepository
 	imageRepo     ImageRepository
 	itemImageRepo ItemImageRepository
+	outboxRepo    OutboxRepository
 }
 
 // Get item service object that represent the rest.ItemService interface
-func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository) *ItemService {
+func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository, or OutboxRepository) *ItemService {
 	return &ItemService{
 		logger:        logger,
 		itemRepo:      ir,
 		imageRepo:     imr,
 		itemImageRepo: itimr,
+		outboxRepo:    or,
 	}
 }
 
@@ -95,7 +102,14 @@ func (i *ItemService) GetItemById(ctx context.Context, id int) (domain.ItemAPI, 
 }
 
 func (i *ItemService) Create(ctx context.Context, item domain.ItemCreate) error {
-	return i.itemImageRepo.Create(ctx, item)
+	event := domainEvent.Event{
+		EventType: domainEvent.EventCreateItem,
+		Payload:   []byte{},
+	}
+
+	return i.outboxRepo.SaveEvent(ctx, event, func() error {
+		return i.itemImageRepo.Create(ctx, item)
+	})
 }
 
 func (i *ItemService) Delete(ctx context.Context, id int) error {
