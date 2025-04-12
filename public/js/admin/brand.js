@@ -1,6 +1,6 @@
 export async function optionBrands(select) {
     try {
-        const url = `http://localhost:8080/brand/get`;
+        const url = `http://localhost:8081/brand/get`;
         const response = await fetch(url)
 
         if (!response.ok) {
@@ -23,7 +23,7 @@ export async function optionBrands(select) {
 
 export async function fetchBrands() {
     try {
-        const url = `http://localhost:8080/brand/get`;
+        const url = `http://localhost:8081/brand/get`;
         const response = await fetch(url)
 
         if (!response.ok) {

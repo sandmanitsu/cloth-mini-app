@@ -4,7 +4,7 @@ import { getImage } from './image.js';
 
 const IMAGE_GALLERY_WIDHT = 323
 const IMAGE_GALLERY_HEIGHT = 430
-const DEFAULT_IMAGE_ADDR = "http://localhost:8080/admin/static/img/no_image.jpg"
+const DEFAULT_IMAGE_ADDR = "http://localhost:8081/admin/static/img/no_image.jpg"
 
 // галлерея изображение {file_id => base64image}
 let imagesIds = [];
@@ -38,7 +38,7 @@ async function create() {
     }
 
     try {
-        const response = await fetch(`http://localhost:8080/item/create`, {
+        const response = await fetch(`http://localhost:8081/item/create`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ async function uploadImage(event) {
     formData.append('uuid', crypto.randomUUID())
 
     try {
-        const response = await fetch(`http://localhost:8080/image/temp`, {
+        const response = await fetch(`http://localhost:8081/image/temp`, {
             method: 'POST',
             body: formData
         });
