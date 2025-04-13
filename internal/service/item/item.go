@@ -1,7 +1,6 @@
 package item
 
 import (
-	domainEvent "cloth-mini-app/internal/domain/event"
 	domain "cloth-mini-app/internal/domain/item"
 	sl "cloth-mini-app/internal/logger"
 	"context"
@@ -26,12 +25,13 @@ type ImageRepository interface {
 }
 
 type ItemImageRepository interface {
-	// Create temp image, stored it to s3 and db
-	Create(ctx context.Context, item domain.ItemCreate) error
+	// Create item and return itemId
+	// if err != nil, itemID = 0
+	Create(ctx context.Context, item domain.ItemCreate) (uint, error)
 }
 
-type OutboxRepository interface {
-	SaveEvent(ctx context.Context, event domainEvent.Event, action func() error) error
+type OutboxFacade interface {
+	CreateItemWithNotification(ctx context.Context, item domain.ItemCreate) error
 }
 
 type ItemService struct {
@@ -39,17 +39,17 @@ type ItemService struct {
 	itemRepo      ItemRepository
 	imageRepo     ImageRepository
 	itemImageRepo ItemImageRepository
-	outboxRepo    OutboxRepository
+	outboxFacade  OutboxFacade
 }
 
 // Get item service object that represent the rest.ItemService interface
-func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository, or OutboxRepository) *ItemService {
+func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository, obxf OutboxFacade) *ItemService {
 	return &ItemService{
 		logger:        logger,
 		itemRepo:      ir,
 		imageRepo:     imr,
 		itemImageRepo: itimr,
-		outboxRepo:    or,
+		outboxFacade:  obxf,
 	}
 }
 
@@ -102,14 +102,10 @@ func (i *ItemService) GetItemById(ctx context.Context, id int) (domain.ItemAPI, 
 }
 
 func (i *ItemService) Create(ctx context.Context, item domain.ItemCreate) error {
-	event := domainEvent.Event{
-		EventType: domainEvent.EventCreateItem,
-		Payload:   []byte{},
-	}
+	// _, err := i.itemImageRepo.Create(ctx, item)
 
-	return i.outboxRepo.SaveEvent(ctx, event, func() error {
-		return i.itemImageRepo.Create(ctx, item)
-	})
+	// return err
+	return i.outboxFacade.CreateItemWithNotification(ctx, item)
 }
 
 func (i *ItemService) Delete(ctx context.Context, id int) error {

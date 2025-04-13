@@ -4,6 +4,8 @@ import (
 	"cloth-mini-app/internal/background"
 	congig "cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/delivery/rest"
+	"cloth-mini-app/internal/facade"
+	"cloth-mini-app/internal/kafka"
 	sl "cloth-mini-app/internal/logger"
 	brandRepo "cloth-mini-app/internal/repository/brand"
 	categoryRepo "cloth-mini-app/internal/repository/category"
@@ -42,6 +44,8 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	}
 	_ = minioClient
 
+	kafkaProducer := kafka.NewProducer(config.Kafka)
+
 	// prepare repositories
 	itemRepo := itemRepo.NewItemRepository(logger, storage)
 	categoryRepo := categoryRepo.NewCategoryRepository(logger, storage)
@@ -51,17 +55,23 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	lockRepo := lockRepo.NewLockRepository(storage)
 	outboxRepo := outboxRepo.NewOutboxRepository(logger, storage)
 
+	// facade
+	outboxFacade := facade.NewOutboxFacade(storage, logger, outboxRepo, itemImageRepo, brandRepo)
+
 	// prepare services
 	lockService := lock.NewLockService(lockRepo)
-	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo, outboxRepo)
+	itemService := item.NewItemService(logger, itemRepo, imageRepo, itemImageRepo, outboxFacade)
 	categoryService := category.NewCategoryService(logger, categoryRepo)
 	brandService := brand.NewBrandService(logger, brandRepo)
 	imageService := image.NewImageService(logger, minioClient, imageRepo)
 
 	// backgrounds tasks
-	backgroundTask := background.NewBackgroundTask(logger, minioClient, imageRepo, lockService)
+	backgroundTask := background.NewBackgroundTask(
+		logger, minioClient, imageRepo, lockService, outboxRepo, kafkaProducer,
+	)
 	_ = backgroundTask
-	// backgroundTask.TempImage.StartDeleteTempImage()
+	backgroundTask.TempImage.StartDeleteTempImage()
+	backgroundTask.Event.StartSendEvent()
 
 	e := echo.New()
 	e.Static("/admin/static", "public")

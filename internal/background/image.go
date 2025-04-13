@@ -13,23 +13,13 @@ import (
 )
 
 const (
-	frequence = time.Second * 10 // todo. поправить на time.Hour
-	ttl       = time.Minute * 30 // todo. поправить на time.Hour
+	frequenceCheckTempImages = time.Second * 10 // todo. поправить на time.Hour
+	tempImageTTL             = time.Minute * 30 // todo. поправить на time.Hour
 )
 
 var (
 	errNoImageToDelete = fmt.Errorf("no image to delete")
 )
-
-type ImageRepository interface {
-	// Delete temp images data into db
-	DeleteTempImage(ctx context.Context, deleteFn func([]idomain.TempImage) ([]idomain.TempImage, error)) error
-}
-
-type LockService interface {
-	AdvisoryLock(ctx context.Context, id ldomain.AdvisoryLockId) error
-	AdvisoryUnlock(ctx context.Context, id ldomain.AdvisoryLockId) error
-}
 
 type ImageBackground struct {
 	logger    *slog.Logger
@@ -52,7 +42,7 @@ func (i *ImageBackground) StartDeleteTempImage() {
 	i.logger.Info(fmt.Sprintf("%s: task started...", op))
 
 	go func() {
-		ticker := time.NewTicker(frequence)
+		ticker := time.NewTicker(frequenceCheckTempImages)
 
 		for {
 			select {
@@ -72,7 +62,7 @@ func (i *ImageBackground) StartDeleteTempImage() {
 
 					for _, image := range images {
 						curr := time.Now()
-						if curr.Sub(image.UploadedAt) > ttl {
+						if curr.Sub(image.UploadedAt) > tempImageTTL {
 							deletingImage = append(deletingImage, image)
 							err := i.minioCl.Delete(ctx, image.ObjectId)
 							if err != nil {
