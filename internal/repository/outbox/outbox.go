@@ -191,7 +191,6 @@ func (o *OutboxRepository) ChangeStatus(ctx context.Context, eventsId []int) err
 		return err
 	}
 
-	fmt.Println(sql)
 	stmt, err := o.db.Prepare(sql)
 	if err != nil {
 		o.logger.Error(fmt.Sprintf("%s : failed get prepare stmt", op))
