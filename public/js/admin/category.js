@@ -1,6 +1,6 @@
 export async function optionCategory(select) {
     try {
-        const url = `http://localhost:8080/category/get`;
+        const url = `http://localhost:8081/category/get`;
         const response = await fetch(url)
 
         if (!response.ok) {
@@ -23,7 +23,7 @@ export async function optionCategory(select) {
 
 export async function fetchCategory() {
     try {
-        const url = `http://localhost:8080/category/get`;
+        const url = `http://localhost:8081/category/get`;
         const response = await fetch(url)
 
         if (!response.ok) {

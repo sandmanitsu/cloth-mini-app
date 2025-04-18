@@ -29,16 +29,19 @@ func NewItemImageRepository(logger *slog.Logger, db *postgresql.Storage) *ItemIm
 	}
 }
 
-func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate) error {
+// create item and return itemID and error
+func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate) (uint, error) {
 	const op = "repository.item_image.Create"
 
+	var itemID uint
 	err := postgresql.WrapTx(ctx, i.db, func(ctx context.Context) error {
-		itemId, err := i.createItem(ctx, item)
+		id, err := i.createItem(ctx, item)
 		if err != nil {
 			return err
 		}
+		itemID = id
 
-		err = i.createImage(ctx, itemId, item.Images)
+		err = i.createImage(ctx, id, item.Images)
 		if err != nil {
 			return err
 		}
@@ -48,16 +51,18 @@ func (i *ItemImageRepository) Create(ctx context.Context, item domain.ItemCreate
 			return err
 		}
 
+		// err = i.createNotification(ctx, int(itemId), item, eventDomain.EventCreateItem)
+
 		return err
 	})
 
 	if err != nil {
 		i.logger.Error(op, sl.Err(err))
 
-		return err
+		return 0, err
 	}
 
-	return nil
+	return itemID, nil
 }
 
 func (i *ItemImageRepository) createItem(ctx context.Context, item domain.ItemCreate) (uint, error) {
@@ -188,4 +193,37 @@ func (i *ItemImageRepository) deleteFromTempImageTable(ctx context.Context, imag
 	}
 
 	return nil
+}
+
+func (i *ItemImageRepository) createNotification(ctx context.Context, itemId int, item domain.ItemCreate, event string) error {
+	const op = "repository.item_image.createNotification"
+
+	tx, ok := postgresql.TxFromCtx(ctx)
+	if !ok {
+		i.logger.Error(fmt.Sprintf("%s : failed get transaction from context", op))
+
+		return errGetTransaction
+	}
+
+	payload := fmt.Sprintf(`{"item_id":"%d", "brand_id":"%d"}`, itemId, item.BrandId)
+
+	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Insert("outbox").
+		Columns("event_type", "payload").
+		Values(event, []byte(payload)).
+		ToSql()
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+
+		return err
+	}
+
+	_, err = tx.Exec(sql, args...)
+	if err != nil {
+		i.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return err
+	}
+
+	return fmt.Errorf("some err...")
 }

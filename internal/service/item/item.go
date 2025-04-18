@@ -25,8 +25,13 @@ type ImageRepository interface {
 }
 
 type ItemImageRepository interface {
-	// Create temp image, stored it to s3 and db
-	Create(ctx context.Context, item domain.ItemCreate) error
+	// Create item and return itemId
+	// if err != nil, itemID = 0
+	Create(ctx context.Context, item domain.ItemCreate) (uint, error)
+}
+
+type OutboxFacade interface {
+	CreateItemWithNotification(ctx context.Context, item domain.ItemCreate) error
 }
 
 type ItemService struct {
@@ -34,15 +39,17 @@ type ItemService struct {
 	itemRepo      ItemRepository
 	imageRepo     ImageRepository
 	itemImageRepo ItemImageRepository
+	outboxFacade  OutboxFacade
 }
 
 // Get item service object that represent the rest.ItemService interface
-func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository) *ItemService {
+func NewItemService(logger *slog.Logger, ir ItemRepository, imr ImageRepository, itimr ItemImageRepository, obxf OutboxFacade) *ItemService {
 	return &ItemService{
 		logger:        logger,
 		itemRepo:      ir,
 		imageRepo:     imr,
 		itemImageRepo: itimr,
+		outboxFacade:  obxf,
 	}
 }
 
@@ -95,7 +102,10 @@ func (i *ItemService) GetItemById(ctx context.Context, id int) (domain.ItemAPI, 
 }
 
 func (i *ItemService) Create(ctx context.Context, item domain.ItemCreate) error {
-	return i.itemImageRepo.Create(ctx, item)
+	// _, err := i.itemImageRepo.Create(ctx, item)
+
+	// return err
+	return i.outboxFacade.CreateItemWithNotification(ctx, item)
 }
 
 func (i *ItemService) Delete(ctx context.Context, id int) error {

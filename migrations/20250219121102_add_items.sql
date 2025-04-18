@@ -51,6 +51,15 @@ CREATE TABLE IF NOT EXISTS public.temp_images (
 	CONSTRAINT temp_images_pk PRIMARY KEY (id)
 );
 
+CREATE TABLE IF NOT EXISTS public.outbox (
+    id serial,
+    event_type text NOT NULL,
+    payload jsonb NOT NULL,
+    status text NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'done')),
+    created_at timestamp WITHOUT TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    reserved_to timestamp
+);
+
 -- Inset data
 -- Category
 INSERT INTO public.category (type, name) VALUES ('1','Верхняя одежда');

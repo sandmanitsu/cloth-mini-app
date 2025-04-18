@@ -11,7 +11,7 @@ async function fetchItem() {
     let id = url.match(/\d+$/)[0]
 
     try {
-        const url = `http://localhost:8080/item/get/${id}`;
+        const url = `http://localhost:8081/item/get/${id}`;
         const response = await fetch(url)
         const brands = await fetchBrands()
         const category = await fetchCategory()
@@ -137,7 +137,7 @@ function createDeleteBtn(image) {
         const imageId = event.target.getAttribute('image_id');
 
         try {
-            const response = await fetch(`http://localhost:8080/image/delete?image_id=${imageId}`, {
+            const response = await fetch(`http://localhost:8081/image/delete?image_id=${imageId}`, {
                 method: 'DELETE'
             });
 
@@ -193,7 +193,7 @@ async function update() {
     console.log(updateData, id);
 
     try {
-        const response = await fetch(`http://localhost:8080/item/update/${id}`, {
+        const response = await fetch(`http://localhost:8081/item/update/${id}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -219,7 +219,7 @@ async function uploadImage(event) {
     let id = document.getElementById('item-id').value
 
     try {
-        const response = await fetch(`http://localhost:8080/image/create?itemId=${id}`, {
+        const response = await fetch(`http://localhost:8081/image/create?itemId=${id}`, {
             method: 'POST',
             body: formData
         });

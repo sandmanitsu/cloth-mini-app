@@ -15,6 +15,7 @@ type Config struct {
 	Env   string `env:"ENV" env-required:"true"`
 	DB    DB
 	Minio Minio
+	Kafka Kafka
 }
 
 type DB struct {
@@ -30,6 +31,11 @@ type Minio struct {
 	BucketName string `env:"MINIO_BUCKET_NAME" env-required:"true"`
 	User       string `env:"MINIO_ROOT_USER" env-required:"true"`
 	Password   string `env:"MINIO_ROOT_PASSWORD" env-required:"true"`
+}
+
+type Kafka struct {
+	KafkaBroker string `env:"KAFKA_BROKER" env-required:"true"`
+	KafkaTopic  string `env:"KAFKA_TOPIC" env-required:"true"`
 }
 
 var (

@@ -38,7 +38,7 @@ async function performSearch() {
 // Получение списка товаров
 async function fetchItems(limit = 20, offset = 0, queryParams = "") {
     try {
-        const url = `http://localhost:8080/item/get?limit=${limit}&offset=${offset}${queryParams}`;
+        const url = `http://localhost:8081/item/get?limit=${limit}&offset=${offset}${queryParams}`;
         const response = await fetch(url)
 
         if (!response.ok) {

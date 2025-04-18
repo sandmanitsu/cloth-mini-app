@@ -5,7 +5,7 @@ export async function getImage(imageId) {
     }
 
     try {
-        let response = await fetch(`http://localhost:8080/image/get/${imageId}`)
+        let response = await fetch(`http://localhost:8081/image/get/${imageId}`)
 
         if (!response.ok) {
             throw new Error(`Ошибка: ${response.status}`);
