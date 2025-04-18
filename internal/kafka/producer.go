@@ -25,8 +25,9 @@ func NewProducer(cfg config.Kafka) *Producer {
 	}
 }
 
-func (p *Producer) WriteMesage(ctx context.Context, payload []byte) error {
+func (p *Producer) WriteMesage(ctx context.Context, eventType string, payload []byte) error {
 	err := p.w.WriteMessages(ctx, kafka.Message{
+		Key:   []byte(eventType),
 		Value: payload,
 	})
 	if err != nil {

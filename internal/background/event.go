@@ -1,8 +1,6 @@
 package background
 
 import (
-	domain "cloth-mini-app/internal/domain/event"
-	ldomain "cloth-mini-app/internal/domain/lock"
 	sl "cloth-mini-app/internal/logger"
 	"context"
 	"fmt"
@@ -42,7 +40,7 @@ func (e *EventBackground) StartSendEvent() {
 			case <-ticker.C:
 				ctx := context.Background()
 
-				events, err := e.getEvents(ctx)
+				events, err := e.outboxRepo.GetEvents(ctx)
 				if err != nil {
 					e.logger.Error(fmt.Sprintf("%s : failed get events", op), sl.Err(err))
 					continue
@@ -53,7 +51,7 @@ func (e *EventBackground) StartSendEvent() {
 
 				successEventsId := make([]int, 0, len(events))
 				for _, event := range events {
-					if err := e.producer.WriteMesage(ctx, event.Payload); err != nil {
+					if err := e.producer.WriteMesage(ctx, event.EventType, event.Payload); err != nil {
 						e.logger.Error(fmt.Sprintf("%s : failed send event", op), sl.Err(err))
 						continue
 					}
@@ -67,26 +65,4 @@ func (e *EventBackground) StartSendEvent() {
 			}
 		}
 	}()
-}
-
-func (e *EventBackground) getEvents(ctx context.Context) ([]domain.Event, error) {
-	const op = "background.event.GetEvents"
-
-	if err := e.lockSrv.AdvisoryLock(ctx, ldomain.OutboxAdvisoryLockId); err != nil {
-		e.logger.Error(fmt.Sprintf("%s : failed get advisory lock", op), sl.Err(err))
-
-		return nil, err
-	}
-	defer func() {
-		if err := e.lockSrv.AdvisoryUnlock(ctx, ldomain.OutboxAdvisoryLockId); err != nil {
-			e.logger.Error(fmt.Sprintf("%s : failed advisory unlock", op), sl.Err(err))
-		}
-	}()
-
-	events, err := e.outboxRepo.GetEvents(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return events, nil
 }

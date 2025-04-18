@@ -7,6 +7,7 @@ import (
 	"cloth-mini-app/internal/storage/postgresql"
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 )
@@ -41,6 +42,13 @@ func NewOutboxFacade(db *postgresql.Storage, logger *slog.Logger, outboxr Outbox
 	}
 }
 
+type createItemEventPayload struct {
+	ItemId    uint   `json:"item_id"`
+	BrandName string `json:""`
+	ItemName  string `json:"item_name"`
+	Price     uint   `json:"price"`
+}
+
 func (o *OutboxFacade) CreateItemWithNotification(ctx context.Context, item idomain.ItemCreate) error {
 	brand, err := o.brandRepo.GetBrand(ctx, item.BrandId)
 	if err != nil {
@@ -53,18 +61,20 @@ func (o *OutboxFacade) CreateItemWithNotification(ctx context.Context, item idom
 			return err
 		}
 
-		event := edomain.Event{
-			EventType: edomain.EventCreateItem,
-			Payload: []byte(fmt.Sprintf(
-				`{"item_id":"%d", "brand_name":"%s", "item_name":"%s", "price":"%d"}`,
-				itemId,
-				brand.Name,
-				item.Name,
-				item.Price,
-			)),
+		payload, err := json.Marshal(createItemEventPayload{
+			ItemId:    itemId,
+			BrandName: brand.Name,
+			ItemName:  item.Name,
+			Price:     item.Price,
+		})
+		if err != nil {
+			return err
 		}
 
-		err = o.outboxRepo.CreateEvent(ctx, event)
+		err = o.outboxRepo.CreateEvent(ctx, edomain.Event{
+			EventType: edomain.EventCreateItem,
+			Payload:   payload,
+		})
 		if err != nil {
 			return err
 		}

@@ -30,7 +30,7 @@ type OutboxRepository interface {
 }
 
 type Producer interface {
-	WriteMesage(ctx context.Context, payload []byte) error
+	WriteMesage(ctx context.Context, eventType string, payload []byte) error
 }
 
 func NewBackgroundTask(
