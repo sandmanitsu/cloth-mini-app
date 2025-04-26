@@ -40,27 +40,29 @@ func (e *EventBackground) StartSendEvent() {
 			case <-ticker.C:
 				ctx := context.Background()
 
-				events, err := e.outboxRepo.GetEvents(ctx)
-				if err != nil {
-					e.logger.Error(fmt.Sprintf("%s : failed get events", op), sl.Err(err))
-					continue
-				}
-				if len(events) == 0 {
-					continue
-				}
-
-				successEventsId := make([]int, 0, len(events))
-				for _, event := range events {
-					if err := e.producer.WriteMesage(ctx, event.EventType, event.Payload); err != nil {
-						e.logger.Error(fmt.Sprintf("%s : failed send event", op), sl.Err(err))
+				for {
+					events, err := e.outboxRepo.GetEvents(ctx)
+					if err != nil {
+						e.logger.Error(fmt.Sprintf("%s : failed get events", op), sl.Err(err))
 						continue
 					}
+					if len(events) == 0 {
+						break
+					}
 
-					successEventsId = append(successEventsId, event.Id)
-				}
+					successEventsId := make([]int, 0, len(events))
+					for _, event := range events {
+						if err := e.producer.WriteMesage(ctx, event.EventType, event.Payload); err != nil {
+							e.logger.Error(fmt.Sprintf("%s : failed send event", op), sl.Err(err))
+							continue
+						}
 
-				if len(successEventsId) != 0 {
-					e.outboxRepo.ChangeStatus(ctx, successEventsId)
+						successEventsId = append(successEventsId, event.Id)
+					}
+
+					if len(successEventsId) != 0 {
+						e.outboxRepo.ChangeStatus(ctx, successEventsId)
+					}
 				}
 			}
 		}

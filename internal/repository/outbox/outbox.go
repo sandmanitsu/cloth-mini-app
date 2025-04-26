@@ -16,6 +16,8 @@ import (
 const (
 	statusDone = "done"
 	statusNew  = "new"
+
+	limitGetEvent = 10
 )
 
 type OutboxRepository struct {
@@ -72,6 +74,7 @@ func (o *OutboxRepository) getEvents(ctx context.Context) ([]domain.Event, error
 		From("outbox").
 		Where("status = ?", statusNew).
 		Where("reserved_to IS NULL OR reserved_to < ?", time.Now()).
+		Limit(limitGetEvent).
 		ToSql()
 	if err != nil {
 		o.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
