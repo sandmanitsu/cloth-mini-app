@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	frequenceCheckTempImages = time.Second * 10 // todo. поправить на time.Hour
+	frequenceCheckTempImages = time.Second * 60 // todo. поправить на time.Hour
 	tempImageTTL             = time.Minute * 30 // todo. поправить на time.Hour
 )
 

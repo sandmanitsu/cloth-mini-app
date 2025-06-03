@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	frequenceSendEvents = time.Second * 10
+	frequenceSendEvents = time.Second * 60
 )
 
 type EventBackground struct {
