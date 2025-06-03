@@ -55,3 +55,26 @@ func (b *BrandRepository) GetBrands(ctx context.Context) ([]domain.Brand, error)
 
 	return brands, nil
 }
+
+func (b *BrandRepository) GetBrand(ctx context.Context, brandId int) (domain.Brand, error) {
+	const op = "repository.Brand.GetBrand"
+
+	sql, args, err := squirrel.StatementBuilder.PlaceholderFormat(squirrel.Dollar).
+		Select("id", "name").
+		From("Brand").
+		Where("id = ?", brandId).
+		ToSql()
+	if err != nil {
+		b.logger.Error(fmt.Sprintf("%s : building sql query", op), sl.Err(err))
+	}
+
+	var brand domain.Brand
+	err = b.db.QueryRow(sql, args...).Scan(&brand.ID, &brand.Name)
+	if err != nil {
+		b.logger.Error(fmt.Sprintf("%s: %s", op, sql), sl.Err(err))
+
+		return brand, err
+	}
+
+	return brand, nil
+}
