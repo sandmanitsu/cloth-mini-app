@@ -2,6 +2,8 @@ package postgresql
 
 import (
 	"cloth-mini-app/internal/config"
+	"cloth-mini-app/internal/retry"
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -29,12 +31,21 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 		cfg.DBname,
 	)
 
-	db, err := sql.Open("postgres", psqlInfo)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
+	var db *sql.DB
+	var err error
+	err = retry.Retry(context.Background(), retry.RetryConfig{MaxRetry: 5}, func() error {
+		db, err = sql.Open("postgres", psqlInfo)
+		if err != nil {
+			return err
+		}
 
-	if err = db.Ping(); err != nil {
+		if err = db.Ping(); err != nil {
+			return fmt.Errorf("%s: %w", op, err)
+		}
+
+		return nil
+	})
+	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 

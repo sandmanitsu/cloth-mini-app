@@ -2,6 +2,8 @@ package config
 
 import (
 	"log"
+	"os"
+	"path/filepath"
 	"sync"
 
 	"github.com/ilyakaznacheev/cleanenv"
@@ -42,36 +44,12 @@ var (
 )
 
 // Getting config variables from enviroment variables
-func MustLoad() *Config {
-	if config == nil {
-		once.Do(
-			func() {
-				var newConfig Config
-				if err := cleanenv.ReadEnv(&newConfig); err != nil {
-					log.Fatalf("Error reading config file: %s", err)
-				}
-
-				config = &newConfig
-			})
-	}
-
-	return config
-}
-
-// Getting config variables from .env file
 // func MustLoad() *Config {
 // 	if config == nil {
 // 		once.Do(
 // 			func() {
-// 				configPath := filepath.Join(".env")
-
-// 				if _, err := os.Stat(configPath); err != nil {
-// 					log.Fatalf("Error opening config file: %s", err)
-// 				}
-
 // 				var newConfig Config
-// 				err := cleanenv.ReadConfig(configPath, &newConfig)
-// 				if err != nil {
+// 				if err := cleanenv.ReadEnv(&newConfig); err != nil {
 // 					log.Fatalf("Error reading config file: %s", err)
 // 				}
 
@@ -81,3 +59,27 @@ func MustLoad() *Config {
 
 // 	return config
 // }
+
+// Getting config variables from .env file
+func MustLoad() *Config {
+	if config == nil {
+		once.Do(
+			func() {
+				configPath := filepath.Join(".env")
+
+				if _, err := os.Stat(configPath); err != nil {
+					log.Fatalf("Error opening config file: %s", err)
+				}
+
+				var newConfig Config
+				err := cleanenv.ReadConfig(configPath, &newConfig)
+				if err != nil {
+					log.Fatalf("Error reading config file: %s", err)
+				}
+
+				config = &newConfig
+			})
+	}
+
+	return config
+}
