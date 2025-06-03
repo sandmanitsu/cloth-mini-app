@@ -6,12 +6,17 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"time"
 
 	"github.com/lib/pq"
 )
 
 const (
 	duplicateKeyCode = "23505"
+
+	maxRetry       = 5
+	baseDelayRetry = time.Second * 5
+	maxDelayRetry  = time.Minute
 )
 
 type Storage struct {
@@ -33,7 +38,13 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 
 	var db *sql.DB
 	var err error
-	err = retry.Retry(context.Background(), retry.RetryConfig{MaxRetry: 5}, func() error {
+
+	retryConfig := retry.RetryConfig{
+		MaxRetry:  maxRetry,
+		BaseDelay: baseDelayRetry,
+		MaxDelay:  maxDelayRetry,
+	}
+	err = retry.Retry(context.Background(), retryConfig, func() error {
 		db, err = sql.Open("postgres", psqlInfo)
 		if err != nil {
 			return err
