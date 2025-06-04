@@ -19,6 +19,7 @@ type RetryConfig struct {
 	MaxRetry  uint
 	BaseDelay time.Duration
 	MaxDelay  time.Duration
+	UsedFrom  string
 }
 
 func Retry(ctx context.Context, cfg RetryConfig, action func() error) error {
@@ -39,8 +40,8 @@ func Retry(ctx context.Context, cfg RetryConfig, action func() error) error {
 		jitter := time.Duration(rand.Int63n(int64(backoff / 2)))
 
 		fmt.Printf(
-			"attempt %d failed, waiting %v + jitter time %v (max delay %v)...\n",
-			attempt+1, backoff, jitter, cfg.MaxDelay,
+			"%s attempt %d failed, waiting %v + jitter time %v (max delay %v)...\n",
+			cfg.UsedFrom, attempt+1, backoff, jitter, cfg.MaxDelay,
 		)
 		time.Sleep(backoff + jitter)
 	}

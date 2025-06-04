@@ -43,6 +43,7 @@ func NewPostgreSQL(cfg config.DB) (*Storage, error) {
 		MaxRetry:  maxRetry,
 		BaseDelay: baseDelayRetry,
 		MaxDelay:  maxDelayRetry,
+		UsedFrom:  "postgresql",
 	}
 	err = retry.Retry(context.Background(), retryConfig, func() error {
 		db, err = sql.Open("postgres", psqlInfo)

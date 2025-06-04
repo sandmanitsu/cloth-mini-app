@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"cloth-mini-app/internal/config"
 	"cloth-mini-app/internal/dto"
+	"cloth-mini-app/internal/retry"
 	"context"
 	"fmt"
 	"io"
 	"sync"
+	"time"
 
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
@@ -15,6 +17,10 @@ import (
 
 const (
 	ImageContentType = "image/jpeg"
+
+	maxRetry       = 5
+	baseDelayRetry = time.Second * 5
+	maxDelayRetry  = time.Minute
 )
 
 type MinioClient struct {
@@ -28,9 +34,25 @@ func NewMinioClient(cfg config.Minio) (*MinioClient, error) {
 
 	ctx := context.Background()
 
-	client, err := minio.New(cfg.Endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(cfg.User, cfg.Password, ""),
-		Secure: false,
+	var client *minio.Client
+	var err error
+
+	retryConfig := retry.RetryConfig{
+		MaxRetry:  maxRetry,
+		BaseDelay: baseDelayRetry,
+		MaxDelay:  maxDelayRetry,
+		UsedFrom:  "minio",
+	}
+	err = retry.Retry(context.Background(), retryConfig, func() error {
+		client, err = minio.New(cfg.Endpoint, &minio.Options{
+			Creds:  credentials.NewStaticV4(cfg.User, cfg.Password, ""),
+			Secure: false,
+		})
+		if err != nil {
+			return err
+		}
+
+		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)

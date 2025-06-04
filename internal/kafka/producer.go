@@ -14,10 +14,11 @@ type Producer struct {
 
 func NewProducer(cfg config.Kafka) *Producer {
 	writer := &kafka.Writer{
-		Addr:     kafka.TCP(cfg.KafkaBroker),
-		Topic:    cfg.KafkaTopic,
-		Balancer: &kafka.LeastBytes{},
-		Logger:   kafka.LoggerFunc(logf),
+		Addr: kafka.TCP(cfg.KafkaBroker),
+		// Topic:                  cfg.KafkaTopic,
+		Balancer:               &kafka.LeastBytes{},
+		Logger:                 kafka.LoggerFunc(logf),
+		AllowAutoTopicCreation: true,
 	}
 
 	return &Producer{
@@ -29,6 +30,7 @@ func (p *Producer) WriteMesage(ctx context.Context, eventType string, payload []
 	err := p.w.WriteMessages(ctx, kafka.Message{
 		Key:   []byte(eventType),
 		Value: payload,
+		Topic: "notifications",
 	})
 	if err != nil {
 		return err

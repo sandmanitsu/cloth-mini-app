@@ -49,6 +49,7 @@ func Run(config *congig.Config, logger *slog.Logger) {
 	_ = minioClient
 
 	kafkaProducer := kafka.NewProducer(config.Kafka)
+	_ = kafkaProducer
 
 	// prepare repositories
 	itemRepo := itemRepo.NewItemRepository(logger, storage)
